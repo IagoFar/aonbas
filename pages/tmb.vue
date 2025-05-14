@@ -70,10 +70,12 @@ const lineColor = '#E60012'
     </div>
     <!-- Enllaços -->
     <div class="bg-[#1C6962] dark:bg-[#37cbbf] rounded-md w-full">
-      <h1 class="pt-2 font-bold text-black dark:text-white">Enllaços:</h1>
+      <h1 class="pt-2 pl-3 font-bold text-black dark:text-white">Enllaços:</h1>
       <div class="flex pl-3">
-        <img src="../public/metro/L5_barcelona.png" alt="L5" class="py-2 w-10">
-        <img src="../public/metro/L5_barcelona.png" alt="L5" class="py-2 w-10">
+        <img src="../public/metro/L5_barcelona.png" alt="L5" class="py-2 w-10 mr-5">
+        <img src="../public/metro/L9N_Barcelona.svg" alt="L9N" class="py-2 w-10 mr-5">
+        <img src="../public/metro/L10_Nord_barcelona.png" alt="L10N" class="py-2 w-10 mr-5">
+        <img src="../public/renfe/Rodalies.png" alt="L5" class="py-2 w-10 mr-5">
       </div> 
     </div>
   </div>
