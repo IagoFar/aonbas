@@ -26,39 +26,34 @@ const fetchTMB = async () => {
 
 onMounted(fetchTMB)
 //PARTE VISUAL
+
+import MetroLine from '@/components/MetroLine.vue'
+const stations = [
+  { name: 'Clot', correspondence: true },
+  { name: 'Navas', correspondence: false },
+  { name: 'La Sagrera', correspondence: true },
+  { name: 'Fabra i Puig', correspondence: true },
+  { name: 'Sant Andreu', correspondence: false }
+]
+const currentStation = 'La Sagrera'
+const lineColor = '#E60012'
 </script>
 
 <template>
   <!-- Info estació -->
   <div>
     <div>
-      
+      <MetroLine
+        :stations="stations"
+        :currentStation="currentStation"
+        :lineColor="lineColor"
+      />
     </div>
 
   </div>
   <!-- Mapa -->
   <div>
-    <div class="line-container">
-    <div class="line">
-      <div
-        v-for="(station, index) in stations"
-        :key="station.name"
-        class="station"
-      >
-        <div
-          class="circle"
-          :class="{
-            past: index < currentIndex,
-            current: index === currentIndex,
-            future: index > currentIndex
-          }"
-        ></div>
-        <div class="station-name" :class="{ current: index === currentIndex }">
-          {{ station.name }}
-        </div>
-      </div>
-    </div>
-  </div>
+    
   </div>
   <!-- Pròxims trens -->
   <div>

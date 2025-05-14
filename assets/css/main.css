@@ -1,12 +1,1 @@
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
-
-@layer base {
-  body {
-    @apply bg-backgroundLight text-textLight font-sans;
-  }
-
-  .dark body {
-    @apply bg-backgroundDark text-textDark;
-  }
-}
+@import "tailwindcss";
