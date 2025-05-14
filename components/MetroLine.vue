@@ -1,7 +1,8 @@
 <template>
   <div class="relative px-4 py-6">
-    <!-- Línea base gris -->
-    <div class="absolute left-0 right-0 top-1/2 h-1 bg-gray-300"></div>
+    <!-- Línea base completa -->
+    <div class="absolute left-0 right-0 top-1/2 h-1" :style="{ backgroundColor: '#ccc' }"></div>
+
     <!-- Línea coloreada hasta estación actual -->
     <div
       v-if="currentIndex > 0"
@@ -9,42 +10,42 @@
       :style="{ width: `${(currentIndex / (stations.length - 1)) * 100}%`, backgroundColor: lineColor }"
     ></div>
 
-    <div class="flex justify-between items-center relative z-10">
+    <!-- Contenedor de estaciones -->
+    <div class="relative z-10" style="height: 2rem;">
+      <!-- Estaciones -->
       <div
         v-for="(station, i) in stations"
         :key="station.name || i"
-        class="flex flex-col items-center relative"
+        class="absolute flex flex-col items-center"
+        :style="{
+          left: stations.length === 1 ? '50%' : `${(i / (stations.length - 1)) * 100}%`,
+          transform: 'translateX(-50%)'
+        }"
       >
-        <!-- Si hay correspondencia, dibuja anillo exterior -->
-        <div
-          v-if="station.correspondence"
-          class="absolute"
-          :style="{
-            top: '-6px',
-            width: '24px',
-            height: '24px',
-            borderRadius: '9999px',
-            border: `2px solid ${lineColor}`,
-            backgroundColor: 'white'
-          }"
-        ></div>
+        <!-- Icono estación -->
+        <div class="h-4 flex items-center justify-center">
+          <div
+            v-if="station.correspondence"
+            class="rounded-full bg-white"
+            :style="{
+              width: '16px',
+              height: '16px',
+              border: `3px solid ${i <= currentIndex ? lineColor : '#999'}`
+            }"
+          ></div>
+          <div
+            v-else
+            :style="{
+              width: '4px',
+              height: '12px',
+              backgroundColor: i <= currentIndex ? lineColor : '#999'
+            }"
+          ></div>
+        </div>
 
-        <!-- Círculo de estación -->
+        <!-- Nombre de estación -->
         <div
-          class="w-6 h-6 rounded-full flex items-center justify-center"
-          :class="{
-            'bg-gray-200 border border-gray-400': i < currentIndex,    // ya pasada
-            'bg-white border-4 border-white': i === currentIndex,      // actual (se pinta con línea abajo)
-            'bg-white border border-gray-400': i > currentIndex         // futura
-          }"
-          :style="i === currentIndex
-            ? { backgroundColor: lineColor, borderColor: lineColor }
-            : {}"
-        ></div>
-
-        <!-- Nombre -->
-        <div
-          class="mt-2 text-xs text-center"
+          class="mt-1 text-xs text-center rotate-45 origin-bottom-left whitespace-nowrap"
           :class="{
             'text-gray-400': i < currentIndex,
             'font-bold': i === currentIndex,
@@ -66,7 +67,6 @@ const props = defineProps({
   stations: {
     type: Array,
     required: true
-    // cada item: { name: String, correspondence: Boolean }
   },
   currentStation: {
     type: String,
@@ -86,6 +86,6 @@ const currentIndex = computed(() => {
 
 <style scoped>
 .relative {
-  min-height: 4rem;
+  min-height: 6rem;
 }
 </style>

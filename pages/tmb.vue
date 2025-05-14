@@ -40,27 +40,44 @@ const lineColor = '#E60012'
 </script>
 
 <template>
-  <!-- Info estació -->
-  <div>
+  <div class="p-10 dark:bg-[#1C6962] bg-[#37cbbf] text-black dark:text-white min-h-screen">
+    <!-- Info estació -->
     <div>
-      <MetroLine
-        :stations="stations"
-        :currentStation="currentStation"
-        :lineColor="lineColor"
-      />
+      <div class="flex flex-row items-center">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Barcelona_Metro_Logo.svg/440px-Barcelona_Metro_Logo.svg.png" alt="Logo TMB" class="h-15 mr-2" /> 
+        <img src="../public/metro/L1.png" alt="logo L1" class="w-15 mr-5  ">
+        <div>
+        <h1 class="text-black dark:text-white "><span class="font-bold">Estació: </span>La Sagrera</h1>
+        <h1 class="text-black dark:text-white "><span class="font-bold">Direcció: </span>Fondo</h1>
+        </div>
+      </div>
     </div>
+      <div class="flex-row text-center my-15">
+        <h1 class="text-black dark:text-white"><span class="font-bold">Sigiente: </span>1:20 min</h1>
+        <div>
+          <MetroLine
+            :stations="stations"
+            :currentStation="currentStation"
+            :lineColor="lineColor"
+          />
+        </div>
+        <h1 class="text-black dark:text-white "><span class="font-bold">Proxima: </span>3:20 min</h1>
+      </div>
+    <!-- Mapa -->
+    <!-- Pròxims trens -->
+    <div>
 
+    </div>
+    <!-- Enllaços -->
+    <div class="bg-[#1C6962] dark:bg-[#37cbbf] rounded-md w-full">
+      <h1 class="pt-2 font-bold text-black dark:text-white">Enllaços:</h1>
+      <div class="flex pl-3">
+        <img src="../public/metro/L5_barcelona.png" alt="L5" class="py-2 w-10">
+        <img src="../public/metro/L5_barcelona.png" alt="L5" class="py-2 w-10">
+      </div> 
+    </div>
   </div>
-  <!-- Mapa -->
   <div>
-    
-  </div>
-  <!-- Pròxims trens -->
-  <div>
-
-  </div>
-  <!-- Enllaços -->
-  <div>
-
+    <img src="../public/Aonbas-Eslogan.png" alt="eslogan aonbas">
   </div>
 </template>

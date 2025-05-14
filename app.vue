@@ -1,9 +1,7 @@
 <template>
   <div>
-    <NuxtRouteAnnouncer />
     <OrientationBlocker>
       <NuxtRouteAnnouncer />
-      <NuxtPage />
     </OrientationBlocker>
   </div>
   <NuxtPage />
