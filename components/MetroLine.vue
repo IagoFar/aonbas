@@ -95,7 +95,7 @@
                 width: '5px',
                 height: '16px',
                 transform: 'translateY(-50%)',
-                backgroundColor: i < currentIndex ? '#999' : '#FFFFFF',
+                backgroundColor: i < currentIndex ? '#999' : lineColorValue,
                 border: i < currentIndex ? 'none' : `1px solid ${lineColorValue}`
               }"
             ></div>
@@ -246,6 +246,6 @@ function calculateStationPosition(index) {
 }
 
 .future {
-  color: #333;
+  color: #999;
 }
 </style>

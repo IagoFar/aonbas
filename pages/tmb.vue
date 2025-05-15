@@ -131,6 +131,8 @@ const fetchTMB = async () => {
 const updateCountdown = () => {
   if (countdown.value > 0) {
     countdown.value--
+  } else {
+    countdown.value = "Surt"
   }
   if (secondCountdown.value > 0) {
     secondCountdown.value--
@@ -145,7 +147,7 @@ const formatTime = (seconds) => {
 }
 
 const formattedCountdown = computed(() =>  formatTime(countdown.value))
-const formattedSecondTrainTime = computed(() => formatTime(secondTrainTime.value))
+const formattedSecondTrainTime = computed(() => formatTime(secondCountdown.value))
 
 const getStationName = computed(() => {
   if (!data.value || !Array.isArray(data.value) || data.value.length === 0) {
@@ -230,9 +232,9 @@ function getLineStations(lineCode) {
 
 const getLineLogoPath = computed(() => {
   if (linea) {
-    return `../public/metro/L${linea}.png`
+    return `/metro/L${linea}.png`
   }
-  return '../public/metro/L1.png' // Default fallback
+  return '/metro/L1.png' // Default fallback
 })
 
 onMounted(() => {
@@ -270,7 +272,7 @@ onUnmounted(() => {
     </div>
     <div class="flex-row text-center my-15">
       <h1 class="text-black dark:text-white"><span class="font-bold">Següent tren: </span>{{ formattedCountdown }}</h1>
-      <div class="p-5 bg-black rounded-md">
+      <div class="py-20 dark:bg-black bg-white rounded-md">
         <MetroLine
           :stations="contextualStations"
           :currentStation="getStationName"
@@ -295,8 +297,5 @@ onUnmounted(() => {
         <img src="../public/renfe/Rodalies.png" alt="L5" class="py-2 w-10 mr-5">
       </div> 
     </div>
-  </div>
-  <div>
-    <img src="../public/Aonbas-Eslogan.png" alt="eslogan aonbas">
   </div>
 </template>

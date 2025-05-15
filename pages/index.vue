@@ -1,33 +1,42 @@
 <template>
-  <div class="min-h-screen bg-teal-400 flex flex-col items-center justify-center space-y-4">
-    <h1 class="text-white text-4xl font-bold">Aonbas</h1>
-    <p class="text-white text-center">La teva ruta, el teu ritme, tu on vas?</p>
+  <div>
+    <!-- Splash Screen -->
+    <div v-if="showSplash" class="min-h-screen flex items-center justify-center bg-teal-400 dark:bg-teal-700 transition-opacity duration-1000">
+      <img src="/Aonbas.png" alt="Aonbas" class="w-60 h-auto rounded-2xl">
+    </div>
 
-    <form @submit.prevent="handleSubmit">
-      <div class="w-80 space-y-3">
-        <select v-model="selectedTransport" @change="onTransportChange" class="w-full p-2 rounded">
-          <option value="">Transport</option>
-          <option v-for="t in transports" :key="t" :value="t">{{ t }}</option>
-        </select>
+    <!-- Main Content -->
+    <div v-else class="min-h-screen bg-teal-400 dark:bg-teal-700 flex flex-col items-center pt-30 space-y-4">
+      <img src="/Aonbas.png" alt="Aonbas" class="w-50 rounded-2xl">
+      <h1 class="text-white text-4xl font-bold">Aonbas</h1>
+      <p class="text-white text-center">La teva ruta, el teu ritme, tu on vas?</p>
 
-        <select v-model="selectedLine" @change="onLineChange" class="w-full p-2 rounded" :disabled="!selectedTransport">
-          <option value="">Línia</option>
-          <option v-for="line in filteredLines" :key="line" :value="line">{{ line }}</option>
-        </select>
+      <form @submit.prevent="handleSubmit">
+        <div class="w-80 space-y-3">
+          <select v-model="selectedTransport" @change="onTransportChange" class="w-full p-2 rounded">
+            <option value="">Transport</option>
+            <option v-for="t in transports" :key="t" :value="t">{{ t }}</option>
+          </select>
 
-        <select v-model="selectedStop" class="w-full p-2 rounded" :disabled="!selectedLine">
-          <option value="">Parada</option>
-          <option v-for="stop in filteredStops" :key="stop" :value="stop">{{ stop }}</option>
-        </select>
+          <select v-model="selectedLine" @change="onLineChange" class="w-full p-2 rounded" :disabled="!selectedTransport">
+            <option value="">Línia</option>
+            <option v-for="line in filteredLines" :key="line" :value="line">{{ line }}</option>
+          </select>
 
-        <select v-model="selectedDirection" class="w-full p-2 rounded" :disabled="!selectedLine">
-          <option value="">Direcció</option>
-          <option v-for="dir in filteredDirections" :key="dir" :value="dir">{{ dir }}</option>
-        </select>
+          <select v-model="selectedStop" class="w-full p-2 rounded" :disabled="!selectedLine">
+            <option value="">Parada</option>
+            <option v-for="stop in filteredStops" :key="stop" :value="stop">{{ stop }}</option>
+          </select>
 
-        <button class="w-full bg-black text-white py-2 rounded" type="submit">Busca</button>
-      </div>
-    </form>
+          <select v-model="selectedDirection" class="w-full p-2 rounded" :disabled="!selectedLine">
+            <option value="">Direcció</option>
+            <option v-for="dir in filteredDirections" :key="dir" :value="dir">{{ dir }}</option>
+          </select>
+
+          <button class="w-full bg-black text-white py-2 rounded" type="submit">Busca</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -184,14 +193,14 @@ function handleSubmit() {
     }
   }
 
-  let directionValue = "1" // Default first direction
+  let directionValue = "2" // Default first direction
   
   if (selectedTransport.value && selectedLine.value) {
     const directions = transportData.value[selectedTransport.value][selectedLine.value].direcciones || []
     
     // If the selected direction is the second one in the array, use "2"
     if (directions.length > 1 && directions[1] === selectedDirection.value) {
-      directionValue = "2"
+      directionValue = "1"
     }
   }
 
@@ -206,10 +215,24 @@ function handleSubmit() {
     query: queryParams
   })
 }
+
+const showSplash = ref(true)
+
+onMounted(() => {
+  setTimeout(() => {
+    showSplash.value = false
+  }, 1000) // 1 segundos
+})
 </script>
 
 <style scoped>
 select:disabled {
   background-color: #ccc;
+}
+.splash-fade-enter-active, .splash-fade-leave-active {
+  transition: opacity 1s;
+}
+.splash-fade-enter, .splash-fade-leave-to {
+  opacity: 0;
 }
 </style>
