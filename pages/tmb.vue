@@ -48,8 +48,7 @@ const loadStationData = async () => {
           if (station.NOM_ESTACIO && station.PICTO) {
             // Check if station has multiple lines (interchange)
             const isInterchange = station.PICTO && (
-              station.PICTO.includes(',') || // Contains comma separator
-              (station.PICTO.match(/L\d+/g) || []).length > 1 // Contains multiple line codes
+              station.PICTO.length > 2 // Contains multiple line codes
             );
             
             stationDataMap.value[station.NOM_ESTACIO] = {
@@ -230,6 +229,24 @@ function getLineStations(lineCode) {
   return getDefaultStations().map(s => s.name)
 }
 
+// Function getInterchanges
+const getInterchanges = computed(() => {
+  const station = getStationName.value;
+  const picto = stationDataMap.value[station]?.picto;
+
+  if (!picto) return [];
+
+  // Rompe el string en segmentos de 2 (ej: 'L1ROTR' → ['L1', 'RO', 'TR'])
+  const codes = picto.match(/.{1,2}/g) || [];
+
+  // Filtra la línea actual para no duplicarla
+  return codes.filter(code => {
+    const cleanLine = code.replace('L', '');
+    return cleanLine !== linea && code !== `L${linea}`;
+  });
+});
+
+
 const getLineLogoPath = computed(() => {
   if (linea) {
     return `/metro/L${linea}.png`
@@ -288,14 +305,27 @@ onUnmounted(() => {
       Error al carregar dades
     </div>
     <!-- Enllaços -->
-    <div class="bg-[#1C6962] dark:bg-[#37cbbf] rounded-md w-full">
-      <h1 class="pt-2 pl-3 font-bold text-black dark:text-white">Enllaços:</h1>
-      <div class="flex pl-3">
-        <img src="../public/metro/L5.png" alt="L5" class="py-2 w-10 mr-5">
-        <img src="../public/metro/L9N.png" alt="L9N" class="py-2 w-10 mr-5">
-        <img src="../public/metro/L10N.png" alt="L10N" class="py-2 w-10 mr-5">
-        <img src="../public/renfe/Rodalies.png" alt="L5" class="py-2 w-10 mr-5">
+    <div class="bg-[#1C6962] dark:bg-[#37cbbf] rounded-md w-full p-2">
+      <h1 class="ml-2 font-bold text-black dark:text-white">Enllaços:</h1>
+      <div class="flex ml-2">
+            <img
+            v-for="line in getInterchanges"
+            :key="line"
+            :src="line.startsWith('FG') ? '/fgc/fgc.png' 
+                  : line.startsWith('RO') ? '/renfe/Rodalies.png' 
+                  : line.startsWith('TR') ? '/Tram/Tram.png' 
+                  : `/metro/${line}.png`"
+            :alt="`Línia ${line}`"
+            class="line-icon"
+          />
       </div> 
     </div>
   </div>
 </template>
+<style scoped>
+.line-icon {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+}
+</style>
