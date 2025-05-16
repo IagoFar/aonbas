@@ -26,7 +26,6 @@ const lineStationMap = ref({})
 let apiRefreshTimer = null
 let countdownTimer = null
 
-// Aquí pones tu clave y lógica de llamada a la API de TMB
 const claveTMB = '5c68a6b4727d9860c62abe6354495735'
 
 const loadStationData = async () => {
@@ -40,15 +39,15 @@ const loadStationData = async () => {
     const stationCsvData = await stationResponse.text()
     const lineStationCsvData = await lineStationResponse.text()
     
-    // Parse station data with interchanges
+
     Papa.parse(stationCsvData, {
       header: true,
       complete: (results) => {
         results.data.forEach(station => {
           if (station.NOM_ESTACIO && station.PICTO) {
-            // Check if station has multiple lines (interchange)
+
             const isInterchange = station.PICTO && (
-              station.PICTO.length > 2 // Contains multiple line codes
+              station.PICTO.length > 2
             );
             
             stationDataMap.value[station.NOM_ESTACIO] = {
@@ -106,6 +105,8 @@ const fetchTMB = async () => {
     const res = await $fetch(url)
     data.value = res
 
+    console.log('API response:', data.value)
+
     if (Array.isArray(data.value) && data.value.length > 0) {
 
       const directionData = data.value.find(d => d.codi_via.toString() === destino.toString())
@@ -127,11 +128,121 @@ const fetchTMB = async () => {
   }
 }
 
+const testApiResponse = () => {
+  // Mock API response data
+  const mockData = [
+    {
+      "codi_linia": 3,
+      "codi_via": 1,
+      "codi_estacio": 329,
+      "ocupacio_estacio_sortida": {
+        "percentatge_ocupacio": 39
+      },
+      "propers_trens": [
+        {
+          "codi_servei": "306",
+          "temps_arribada": 1747405891000,
+          "temps_restant": 177,
+          "codi_linia": 3,
+          "nom_linia": "L3",
+          "codi_trajecte": "0031",
+          "desti_trajecte": "Trinitat Nova",
+          "info_tren": {}
+        },
+        {
+          "codi_servei": "307",
+          "temps_arribada": 1747406212000,
+          "temps_restant": 498,
+          "codi_linia": 3,
+          "nom_linia": "L3",
+          "codi_trajecte": "0031",
+          "desti_trajecte": "Trinitat Nova",
+          "info_tren": {
+            "percentatge_ocupacio": 38,
+            "percentatge_ocupacio_cotxes": [
+              40, 44, 20, 40, 47
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "codi_linia": 3,
+      "codi_via": 2,
+      "codi_estacio": 329,
+      "ocupacio_estacio_sortida": {
+        "percentatge_ocupacio": 40
+      },
+      "propers_trens": [
+        {
+          "codi_servei": "321",
+          "temps_arribada": 1747405776000,
+          "temps_restant": 62,
+          "codi_linia": 3,
+          "nom_linia": "L3",
+          "codi_trajecte": "0032",
+          "desti_trajecte": "Zona Universitària",
+          "info_tren": {
+            "percentatge_ocupacio": 13,
+            "percentatge_ocupacio_cotxes": [
+              0, 9, 3, 23, 29
+            ]
+          }
+        },
+        {
+          "codi_servei": "322",
+          "temps_arribada": 1747405969000,
+          "temps_restant": 255,
+          "codi_linia": 3,
+          "nom_linia": "L3",
+          "codi_trajecte": "0032",
+          "desti_trajecte": "Zona Universitària",
+          "info_tren": {
+            "percentatge_ocupacio": 10,
+            "percentatge_ocupacio_cotxes": [
+              4, 5, 0, 15, 23
+            ]
+          }
+        }
+      ]
+    }
+  ];
+
+  // Set the data
+  data.value = mockData;
+  
+  console.log('Mock API response:', data.value);
+
+  // Process the mock data the same way fetchTMB does
+  if (Array.isArray(data.value) && data.value.length > 0) {
+    // Set current line if not set
+    if (!linea) {
+      linea = data.value[0].codi_linia.toString();
+    }
+    
+    // Find direction data based on destino param
+    const currentDestino = destino || '1'; // Default to direction 1 if not specified
+    const directionData = data.value.find(d => d.codi_via.toString() === currentDestino);
+
+    if (directionData && directionData.propers_trens && directionData.propers_trens.length > 0) {
+      // Set data for first train
+      nextTrainTime.value = directionData.propers_trens[0].temps_restant;
+      countdown.value = nextTrainTime.value;
+
+      // Set data for second train if available
+      if (directionData.propers_trens.length > 1) {
+        secondTrainTime.value = directionData.propers_trens[1].temps_restant;
+        secondCountdown.value = secondTrainTime.value;
+      }
+    }
+  }
+}
+
 const updateCountdown = () => {
   if (countdown.value > 0) {
     countdown.value--
-  } else {
-    countdown.value = "Surt"
+  } else if (countdown.value <= 0) {
+    countdown.value = "0"
   }
   if (secondCountdown.value > 0) {
     secondCountdown.value--
@@ -140,6 +251,7 @@ const updateCountdown = () => {
 
 const formatTime = (seconds) => {
   if (!seconds && seconds !== 0) return '--:--'
+  if (seconds === 0) return 'Surt'
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
@@ -257,10 +369,12 @@ const getLineLogoPath = computed(() => {
 onMounted(() => {
   loadStationData()
 
-  fetchTMB()
+  //fetchTMB()
+  // Fake data for testing
+  testApiResponse()
 
   apiRefreshTimer = setInterval(() => {
-    fetchTMB()
+    //fetchTMB()
   }, 10000) // 10 seconds
 
   countdownTimer = setInterval(() => {

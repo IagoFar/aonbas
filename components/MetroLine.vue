@@ -31,12 +31,12 @@
         :style="{
           left: calculateStationPosition(i),
           transform: 'translateX(-50%)',
-          width: '30px' // Wider for text overflow
+          width: '60px' // Wider for text overflow
         }"
       >
         <!-- Station name (diagonal and bold) -->
         <div
-          class="ml-5 text-xs font-bold station-name-container"
+          class="text-xs font-bold station-name-container"
           :class="{
             'passed': i < currentIndex,
             'current': i === currentIndex,
@@ -52,7 +52,7 @@
           <!-- Interchange station (circle centered on line) -->
           <div
             v-if="station.correspondence"
-            class="absolute bottom-15 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            class="absolute bottom-14 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
             style="z-index: 3;"
           >
             <!-- Main circle -->
@@ -223,18 +223,21 @@ function calculateStationPosition(index) {
   height: auto;
   margin-bottom: 1rem;
   overflow: visible;
+  text-align: left;
 }
 
 .station-name {
-  display: inline-block;
-  transform: rotate(-45deg);
-  transform-origin: bottom left;
+  display: block;
   position: relative;
+  text-align: center;
   bottom: -12px;
   font-weight: bold;
-  white-space: nowrap;
-  max-width: none;
-  text-overflow: ellipsis;
+  white-space: normal; /* Allow multiline */
+  max-width: 80px; /* Control width for wrapping */
+  word-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.1;
+  font-size: 0.7rem;
 }
 
 .passed {
