@@ -1,32 +1,102 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Papa from 'papaparse'
 import MetroLine from '@/components/MetroLine.vue'
 
 const route = useRoute()
+const router = useRouter()
 
+const lines = ['1','2','3','4','5','94', '91','104','101','11']
+const stations = ref([])
+
+// Station-specific parameters
 const estacion = route.query.s
 const linea = route.query.l
-const destino = route.query.d
+const destino = '1'
 
+// State management
 const data = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
 
+// Train time tracking
 const nextTrainTime = ref(null)
 const secondTrainTime = ref(null)
 const countdown = ref(null)
 const secondCountdown = ref(null)
 
+// Data mapping
 const stationNameMap = ref({})
 const stationDataMap = ref({})
 const lineStationMap = ref({})
+const interchangeData = ref({}) // New ref for interchange data
 
+// Timers
 let apiRefreshTimer = null
 let countdownTimer = null
 
 const claveTMB = '5c68a6b4727d9860c62abe6354495735'
+
+const loadInterchangeData = async () => {
+  try {
+    const response = await fetch('/data/info_stations.csv')
+    const csvData = await response.text()
+    
+    Papa.parse(csvData, {
+      header: true,
+      complete: (results) => {
+        results.data.forEach(station => {
+          if (station.NOM_METRO) {
+            // Parse metro lines correctly
+            const metroLines = station.LINIES_METRO ? 
+              station.LINIES_METRO.match(/L[0-9]+[NS]*/g) : [];
+            
+            // Parse Renfe lines correctly  
+            const renfeLines = station.LINIES_RENFE ? 
+              station.LINIES_RENFE.match(/R[0-9]+|RG[0-9]+/g) : [];
+            
+            // Parse FGC lines correctly
+            const fgcLines = station.LINIES_FGC ? 
+              station.LINIES_FGC.match(/[SLR][0-9]+|RL[0-9]+/g) : [];
+            
+            // Parse Tram lines correctly
+            const tramLines = station.LINIES_TRAM ? 
+              station.LINIES_TRAM.match(/T[0-9]+/g) : [];
+            
+            interchangeData.value[station.NOM_METRO] = {
+              metro: metroLines || [],
+              renfe: renfeLines || [], 
+              fgc: fgcLines || [],
+              tram: tramLines || []
+            }
+          }
+        })
+        console.log('Loaded interchange data:', interchangeData.value)
+      }
+    })
+  } catch (error) {
+    console.error('Error loading interchange data:', error)
+  }
+}
+
+const loadLineStations = (line) => {
+  fetch('/data/metro/estacions_linia.csv')
+    .then(r => r.text())
+    .then(csv => {
+      Papa.parse(csv, {
+        header: true,
+        complete(res) {
+          stations.value = res.data
+            .filter(s => s.CODI_LINIA === line)
+            .map(s => ({
+              code: s.CODI_ESTACIO,
+              name: s.NOM_ESTACIO
+            }))
+        }
+      })
+    })
+}
 
 const loadStationData = async () => {
   try {
@@ -39,13 +109,11 @@ const loadStationData = async () => {
     const stationCsvData = await stationResponse.text()
     const lineStationCsvData = await lineStationResponse.text()
     
-
     Papa.parse(stationCsvData, {
       header: true,
       complete: (results) => {
         results.data.forEach(station => {
           if (station.NOM_ESTACIO && station.PICTO) {
-
             const isInterchange = station.PICTO && (
               station.PICTO.length > 2
             );
@@ -127,6 +195,7 @@ const fetchTMB = async () => {
     isLoading.value = false
   }
 }
+
 
 const testApiResponse = () => {
   // Mock API response data
@@ -260,6 +329,29 @@ const formatTime = (seconds) => {
 const formattedCountdown = computed(() =>  formatTime(countdown.value))
 const formattedSecondTrainTime = computed(() => formatTime(secondCountdown.value))
 
+
+
+const getLogoPath = (interchange) => {
+  if (!interchange) return '';
+  
+  const { type, line } = interchange;
+  
+  switch (type) {
+    case 'metro':
+      return `/Logos/${line}.svg`;
+    case 'renfe':
+      return `/Logos/${line}.svg`;
+    case 'fgc':
+      return `/Logos/${line}.svg`;
+    case 'tram':
+      return `/Logos/${line}.svg`;
+    default:
+      return '';
+  }
+};
+
+
+
 const getStationName = computed(() => {
   if (!data.value || !Array.isArray(data.value) || data.value.length === 0) {
     return 'Carregant estació...'
@@ -321,6 +413,80 @@ const contextualStations = computed(() => {
   }));
 })
 
+const switchToLine = (targetLine) => {
+  // Extract the line number from the format (e.g., "L3" -> "3")
+  const newLine = targetLine.replace('L', '');
+  
+  // Get the current station name
+  const currentStation = getStationName.value;
+  
+  if (!currentStation) return;
+  
+  // Find the station code for this station name on the target line
+  const stationOnTargetLine = findStationCodeByNameAndLine(currentStation, newLine);
+  
+  if (stationOnTargetLine) {
+    // Navigate to the same station but on the new line
+    router.replace({ 
+      query: { 
+        l: newLine,
+        s: stationOnTargetLine 
+      }
+    });
+  } else {
+    console.warn(`Station ${currentStation} does not exist on line ${newLine}`);
+    // Optionally show a notification to the user
+  }
+};
+
+const findStationCodeByNameAndLine = (stationName, targetLine) => {
+  const allStations = stations.value;
+
+  // Buscar primero entre las estaciones ya cargadas
+  if (allStations?.length > 0) {
+    const match = allStations.find(s => s.name === stationName && s.code.startsWith(getLinePrefix(targetLine)));
+    if (match) return match.code;
+  }
+
+  // Mapeo de líneas a prefijos
+  const getLinePrefix = (line) => {
+    const prefixes = {
+      '1': '1',
+      '2': '2',
+      '3': '3',
+      '4': '4',
+      '5': '5',
+      '9N': '94',
+      '94': '94',
+      '9S': '91',
+      '91': '91',
+      '10N': '104',
+      '104': '104',
+      '10S': '101',
+      '101': '101',
+      '11': '11'
+    };
+    return prefixes[line] || line;
+  };
+
+  const linePrefix = getLinePrefix(targetLine);
+  let matchingCode = null;
+
+  Object.entries(stationNameMap.value).forEach(([code, name]) => {
+    if (name === stationName && code.startsWith(linePrefix)) {
+      matchingCode = code;
+    }
+  });
+
+  if (matchingCode) {
+    console.log(`Found station code ${matchingCode} for station ${stationName} on line L${targetLine}`);
+    return matchingCode;
+  }
+
+  console.warn(`Could not find station code for ${stationName} on line L${targetLine}`);
+  return null;
+};
+
 // Default stations if we can't get real data
 function getDefaultStations() {
   return [
@@ -341,45 +507,90 @@ function getLineStations(lineCode) {
   return getDefaultStations().map(s => s.name)
 }
 
-// Function getInterchanges
 const getInterchanges = computed(() => {
   const station = getStationName.value;
-  const picto = stationDataMap.value[station]?.picto;
-
-  if (!picto) return [];
-
-  // Rompe el string en segmentos de 2 (ej: 'L1ROTR' → ['L1', 'RO', 'TR'])
-  const codes = picto.match(/.{1,2}/g) || [];
-
-  // Filtra la línea actual para no duplicarla
-  return codes.filter(code => {
-    const cleanLine = code.replace('L', '');
-    return cleanLine !== linea && code !== `L${linea}`;
-  });
+  if (!station || !interchangeData.value[station]) return [];
+  
+  const interchange = interchangeData.value[station];
+  const currentMetroLine = `L${linea}`;
+  
+  const result = [];
+  
+  // Add Metro interchanges
+  if (interchange.metro) {
+    interchange.metro.forEach(line => {
+      if (line && line !== currentMetroLine) {
+        result.push({
+          type: 'metro',
+          line: line
+        });
+      }
+    });
+  }
+  
+  // Add Renfe interchanges
+  if (interchange.renfe && interchange.renfe.length > 0) {
+    interchange.renfe.forEach(line => {
+      result.push({
+        type: 'renfe',
+        line: line
+      });
+    });
+  }
+  
+  // Add FGC interchanges
+  if (interchange.fgc && interchange.fgc.length > 0) {
+    interchange.fgc.forEach(line => {
+      result.push({
+        type: 'fgc',
+        line: line
+      });
+    });
+  }
+  
+  // Add Tram interchanges
+  if (interchange.tram && interchange.tram.length > 0) {
+    interchange.tram.forEach(line => {
+      result.push({
+        type: 'tram',
+        line: line
+      });
+    });
+  }
+  
+  return result;
 });
-
 
 const getLineLogoPath = computed(() => {
   if (linea) {
-    return `/metro/L${linea}.png`
+    return `/Logos/L${linea}.svg`
   }
-  return '/metro/L1.png' // Default fallback
-})
+  return '/Logos/L1.svg' // Default fallback
+});
 
 onMounted(() => {
+  const l = route.query.l
+  if (l) {
+    loadLineStations(l)
+  }
+  
   loadStationData()
+  loadInterchangeData() 
 
-  //fetchTMB()
-  // Fake data for testing
-  testApiResponse()
-
-  apiRefreshTimer = setInterval(() => {
-    //fetchTMB()
-  }, 10000) // 10 seconds
-
-  countdownTimer = setInterval(() => {
-    updateCountdown()
-  }, 1000) // 1 second
+  // Only run API calls if we're viewing a station
+  if (estacion && linea) {
+    fetchTMB()
+    // Fake data for testing
+    //testApiResponse()
+    
+    apiRefreshTimer = setInterval(() => {
+      fetchTMB()
+    }, 20000) // 10 seconds
+    
+    countdownTimer = setInterval(() => {
+      updateCountdown()
+    }, 1000) // 1 second
+  }
 })
 
 onUnmounted(() => {
@@ -387,13 +598,40 @@ onUnmounted(() => {
   if (countdownTimer) clearInterval(countdownTimer)
 })
 </script>
-
 <template>
-  <div class="p-10 dark:bg-[#1C6962] bg-[#37cbbf] text-black dark:text-white min-h-screen">
+  <div>
+    <!-- Sin query → elige línea -->
+    <div v-if="!route.query.l">
+      <h2 class="mb-4 font-bold">Selecciona línea</h2>
+      <div class="flex gap-4">
+        <button
+          v-for="l in lines"
+          :key="l"
+          class="px-4 py-2 rounded"
+          @click="() => router.replace({ query: { l } })"
+        ><img :src="`/Logos/L${l}.svg`" :alt="`L${l}`" class="w-20 h-20"></button>
+      </div>
+    </div>
+    <!-- Con query.l → lista de estaciones -->
+    <div v-if="route.query.l && !route.query.s">
+      <h2 class="mb-4 font-bold">Estacions Línia {{ route.query.l }}</h2>
+      <ul class="list-disc pl-6">
+        <li
+          v-for="station in stations"
+          :key="station.code"
+          class="cursor-pointer hover:underline"
+          @click="() => router.replace({ query: { l: route.query.l, s: station.code } })"
+        >
+          {{ station.name }}
+        </li>
+      </ul>
+    </div>
+
+    <div v-if="route.query.s" class="p-10 dark:bg-[#1C6962] bg-[#37cbbf] text-black dark:text-white min-h-screen">
     <!-- Info estació -->
     <div>
       <div class="flex flex-row items-center">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Barcelona_Metro_Logo.svg/440px-Barcelona_Metro_Logo.svg.png" alt="Logo TMB" class="h-15 mr-2" /> 
+        <img src="/Logos/FMB.svg" alt="Logo TMB" class="h-15 mr-2" /> 
         <img :src="getLineLogoPath" :alt="`Línia ${linea}`" class="w-15 mr-5">
         <div>
         <h1 class="text-black dark:text-white "><span class="font-bold">Estació: </span>{{ getStationName }}</h1>
@@ -403,7 +641,7 @@ onUnmounted(() => {
     </div>
     <div class="flex-row text-center my-15">
       <h1 class="text-black dark:text-white"><span class="font-bold">Següent tren: </span>{{ formattedCountdown }}</h1>
-      <div class="py-20 dark:bg-black bg-white rounded-md">
+      <div class=" dark:bg-black bg-white rounded-md">
         <MetroLine
           :stations="contextualStations"
           :currentStation="getStationName"
@@ -419,27 +657,87 @@ onUnmounted(() => {
       Error al carregar dades
     </div>
     <!-- Enllaços -->
-    <div class="bg-[#1C6962] dark:bg-[#37cbbf] rounded-md w-full p-2">
-      <h1 class="ml-2 font-bold text-black dark:text-white">Enllaços:</h1>
-      <div class="flex ml-2">
-            <img
-            v-for="line in getInterchanges"
-            :key="line"
-            :src="line.startsWith('FG') ? '/fgc/fgc.png' 
-                  : line.startsWith('RO') ? '/renfe/Rodalies.png' 
-                  : line.startsWith('TR') ? '/Tram/Tram.png' 
-                  : `/metro/${line}.png`"
-            :alt="`Línia ${line}`"
-            class="line-icon"
-          />
-      </div> 
+      <!-- Enllaços section with operator grouping -->
+      <div class="bg-[#1C6962] dark:bg-[#37cbbf] rounded-md w-full p-2">
+        <h1 class="ml-2 font-bold text-black dark:text-white mb-2">Enllaços:</h1>
+        
+        <!-- If no interchanges available -->
+        <div v-if="getInterchanges.length === 0" class="text-black dark:text-white ml-2">
+          No hi ha enllaços disponibles
+        </div>
+        
+        <div class="space-y-3">
+          <!-- Metro interchanges with click functionality -->
+          <div v-if="getInterchanges.filter(i => i.type === 'metro').length > 0" class="ml-2">
+            <div class="flex items-center mb-1">
+              <img src="/Logos/FMB.svg" alt="Metro" class="h-6 w-auto mr-2" />
+              <span class="text-sm font-semibold">Metro</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <img
+                v-for="interchange in getInterchanges.filter(i => i.type === 'metro')"
+                :key="`metro-${interchange.line}`"
+                :src="getLogoPath(interchange)"
+                :alt="interchange.line"
+                :title="`Canviar a ${interchange.line}`"
+                class="h-8 w-auto cursor-pointer hover:scale-110 transition-transform"
+                @click="switchToLine(interchange.line)"
+              />
+            </div>
+          </div>
+          
+          <!-- Renfe interchanges -->
+          <div v-if="getInterchanges.filter(i => i.type === 'renfe').length > 0" class="ml-2">
+            <div class="flex items-center mb-1">
+              <img src="/Logos/ROD.svg" alt="Rodalies" class="h-6 w-auto mr-2" />
+              <span class="text-sm font-semibold">Rodalies</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <img
+                v-for="interchange in getInterchanges.filter(i => i.type === 'renfe')"
+                :key="`renfe-${interchange.line}`"
+                :src="getLogoPath(interchange)"
+                :alt="interchange.line"
+                class="h-8 w-auto"
+              />
+            </div>
+          </div>
+          
+          <!-- FGC interchanges -->
+          <div v-if="getInterchanges.filter(i => i.type === 'fgc').length > 0" class="ml-2">
+            <div class="flex items-center mb-1">
+              <img src="/Logos/FGC.svg" alt="FGC" class="h-6 w-auto mr-2" />
+              <span class="text-sm font-semibold">FGC</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <img
+                v-for="interchange in getInterchanges.filter(i => i.type === 'fgc')"
+                :key="`fgc-${interchange.line}`"
+                :src="getLogoPath(interchange)"
+                :alt="interchange.line"
+                class="h-8 w-auto"
+              />
+            </div>
+          </div>
+          
+          <!-- Tram interchanges -->
+          <div v-if="getInterchanges.filter(i => i.type === 'tram').length > 0" class="ml-2">
+            <div class="flex items-center mb-1">
+              <img src="/Logos/TRAM.svg" alt="TRAM" class="h-6 w-auto mr-2" />
+              <span class="text-sm font-semibold">TRAM</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <img
+                v-for="interchange in getInterchanges.filter(i => i.type === 'tram')"
+                :key="`tram-${interchange.line}`"
+                :src="getLogoPath(interchange)"
+                :alt="interchange.line"
+                class="h-8 w-auto"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
-<style scoped>
-.line-icon {
-  width: 50px;
-  height: 50px;
-  margin-right: 10px;
-}
-</style>
