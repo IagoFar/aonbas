@@ -1,107 +1,76 @@
 <template>
-  <div class="relative px-4 py-6">
-    <!-- Main colored line - Only between first and last stations -->
+  <div class="relative py-4 px-6 h-full">
+    <!-- Línea vertical principal coloreada -->
     <div 
-      class="absolute top-1/2 h-2" 
+      class="absolute right-1/4 w-2 transform -translate-x-1/2" 
       :style="{ 
         backgroundColor: lineColorValue,
-        left: getFirstStationPosition,
-        right: getLastStationPosition
+        top: '5%',
+        bottom: '5%'
       }"
     ></div>
 
-    <!-- Gray line up to current station (passed part) -->
+    <!-- Línea gris para estaciones pasadas -->
     <div
       v-if="currentIndex >= 0"
-      class="absolute top-1/2 h-2"
+      class="absolute right-1/4 w-2 transform -translate-x-1/2"
       :style="{
-        left: getFirstStationPosition,
-        width: `${getGrayLineWidth}`, 
+        top: '5%',
+        height: `${(currentIndex / (stations.length - 1)) * 84}%`, 
         backgroundColor: '#999'
       }"
     ></div>
 
-    <!-- Station container -->
-    <div class="relative z-10" style="height: 5rem;">
-      <!-- Stations -->
+    <!-- Contenedor de estaciones -->
+    <div class="relative z-10 h-full">
+      <!-- Estaciones equidistantes -->
       <div
         v-for="(station, i) in stations"
         :key="station.name || i"
-        class="absolute"
+        class="absolute w-full"
         :style="{
-          left: calculateStationPosition(i),
-          transform: 'translateX(-50%)',
-          width: '60px' // Wider for text overflow
+          top: `${5 + (i / (stations.length - 1)) * 80}%`,
+          transform: 'translateY(-50%)' /* Centra verticalmente la estación */
         }"
       >
-        <!-- Station name (diagonal and bold) -->
-        <div
-          class="text-xs font-bold station-name-container"
-          :class="{
-            'passed': i < currentIndex,
-            'current': i === currentIndex,
-            'future': i > currentIndex
-          }"
-          :style="i === currentIndex ? { color: lineColorValue } : {}"
-        >
-          <span class="station-name">{{ station.name }}</span>
-        </div>
-
-        <!-- Station markers exactly on the main line -->
-        <div class="relative" style="height: 0px;">
-          <!-- Interchange station (circle centered on line) -->
+        <div class="relative flex items-center">
+          <!-- Nombre de la estación (posicionado a la izquierda) -->
+          <div
+            class="absolute right-1/4 mr-[32px] text-sm font-bold text-right"
+            :class="{
+              'text-gray-400': i < currentIndex,
+              'text-gray-500': i > currentIndex && i !== currentIndex
+            }"
+            :style="i === currentIndex ? { color: lineColorValue } : {}"
+          >
+            {{ station.name }}
+          </div>
+          
+          <!-- Línea mini horizontal (a la izquierda de la línea principal) -->
+          <div 
+            class="absolute right-[calc(25%-2px)] w-[12px] h-[4px]"
+            :style="{
+              backgroundColor: i < currentIndex ? '#999' : lineColorValue,
+              right: 'calc(25%)'
+            }"
+          ></div>
+          
+          <!-- Marcador de correspondencia (círculo) -->
           <div
             v-if="station.correspondence"
-            class="absolute bottom-14 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            style="z-index: 3;"
+            class="absolute right-14 transform translate-x-10px"
+            style="z-index: 5;"
           >
-            <!-- Main circle -->
             <div
               class="rounded-full"
               :style="{
-                width: '16px',
-                height: '16px',
-                backgroundColor: i < currentIndex ? '#fff' : lineColorValue,
-                border: i < currentIndex ? `4px solid #999` : '4px solid #000'
-              }"
-            ></div>
-            
-            <!-- Mini-line indicators -->
-            <div class="mini-lines-container">
-              <!-- Vertical mini-line (positioned above the circle) -->
-              <div
-                class="absolute bottom-1 left-1/2 transform -translate-x-1/2"
-                style="z-index: -1;"
-              >
-                <div
-                  :style="{
-                    width: '5px',
-                    height: '16px',
-                    backgroundColor: i < currentIndex ? '#999' : lineColorValue
-                  }"
-                ></div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Regular station (vertical line touching the main line) -->
-          <div
-            v-else
-            class="absolute bottom-16 left-1/2 transform -translate-x-1/2"
-            style="z-index: 3;"
-          >
-            <div
-              :style="{
-                width: '5px',
-                height: '16px',
-                transform: 'translateY(-50%)',
-                backgroundColor: i < currentIndex ? '#999' : lineColorValue,
-                border: i < currentIndex ? 'none' : `1px solid ${lineColorValue}`
+                width: '14px',
+                height: '14px',
+                backgroundColor: '#fff',
+                border: i < currentIndex ? `2px solid #999` : `2px solid ${lineColorValue}`
               }"
             ></div>
           </div>
-          
-          <!-- End of line stations have no additional markers now -->
         </div>
       </div>
     </div>
@@ -126,129 +95,49 @@ const props = defineProps({
   }
 })
 
-// Map Metro line numbers to their standard colors
+// Mapa de números de línea a sus colores estándar
 const lineColorValue = computed(() => {
   const lineColors = {
-    '1': '#E60012', // Red (L1)
-    '2': '#722283', // Purple (L2)
-    '3': '#00AB4F', // Green (L3)
-    '4': '#FFCC00', // Yellow (L4)
-    '5': '#0073C7', // Blue (L5)
-    '9': '#F38143', // Orange (L9)
-    '10': '#0093D0', // Light Blue (L10)
-    '11': '#6CC24A' // Light Green (L11)
+    '1': '#E60012', // Rojo (L1)
+    '2': '#722283', // Púrpura (L2)
+    '3': '#00AB4F', // Verde (L3)
+    '4': '#FFCC00', // Amarillo (L4)
+    '5': '#0073C7', // Azul (L5)
+    '9': '#F38143', // Naranja (L9)
+    '91': '#F38143', // Naranja (L9S)
+    '94': '#F38143', // Naranja (L9N)
+    '10': '#0093D0', // Azul claro (L10)
+    '101': '#0093D0', // Azul claro (L10S)
+    '104': '#0093D0', // Azul claro (L10N)
+    '11': '#6CC24A' // Verde claro (L11)
   }
   
-  return lineColors[props.line.toString()] || '#E60012' // Default to L1 red
+  return lineColors[props.line.toString()] || '#E60012' // Por defecto, rojo L1
 })
 
+// Encontrar el índice de la estación actual
 const currentIndex = computed(() => {
-  const idx = props.stations.findIndex(s => s.name === props.currentStation)
+  const idx = props.stations.findIndex(s => 
+    typeof s === 'string' ? s === props.currentStation : s.name === props.currentStation
+  )
   return idx >= 0 ? idx : 0
 })
-
-// Get positions for line rendering - adjusted to cut at exact station positions
-const getFirstStationPosition = computed(() => {
-  // Get the exact position of first station
-  return calculateStationPosition(0);
-})
-
-const getLastStationPosition = computed(() => {
-  // Get the exact position of last station
-  const lastPos = calculateStationPosition(props.stations.length - 1);
-  // Convert percentage to a distance from right edge
-  const percentValue = parseFloat(lastPos);
-  return `${100 - percentValue}%`;
-})
-
-// Calculate width for gray line (passed stations)
-const getGrayLineWidth = computed(() => {
-  if (currentIndex.value <= 0) return '0%';
-  
-  const startPos = parseFloat(getFirstStationPosition.value);
-  const currentPos = parseFloat(calculateStationPosition(currentIndex.value));
-  
-  return `${currentPos - startPos}%`;
-})
-
-// Calculate position for each station based on current station and proximity to ends
-function calculateStationPosition(index) {
-  if (props.stations.length === 1) return '50%';
-  
-  const totalStations = props.stations.length;
-  
-  // For very short lines (5 or fewer stations), use evenly distributed positions
-  if (totalStations <= 5) {
-    return `${(index / (totalStations - 1)) * 100}%`;
-  }
-  
-  // Determine ideal center station based on current station's position
-  let centerStationIndex;
-  
-  // If current station is near beginning of line (first 2 stations)
-  if (currentIndex.value <= 1) {
-    centerStationIndex = 2; // Center on the 3rd station
-  } 
-  // If current station is near end of line (last 2 stations)
-  else if (currentIndex.value >= totalStations - 2) {
-    centerStationIndex = totalStations - 3; // Center on 3rd-to-last station
-  }
-  // For L11 line specifically (based on your example)
-  else if (props.line.toString() === '11' && currentIndex.value === 0) {
-    // If Trinitat Nova is the current station, center on Torre baró | Vallbona
-    centerStationIndex = 2;
-  } 
-  // Default: center on current station
-  else {
-    centerStationIndex = currentIndex.value;
-  }
-  
-  // Calculate positions relative to the center station
-  const offset = index - centerStationIndex;
-  const centerPos = 50;
-  const stationSpacing = 12.5; // Space between stations (in percent)
-  
-  return `${centerPos + (offset * stationSpacing)}%`;
-}
 </script>
 
 <style scoped>
-.relative {
-  min-height: 6rem;
+.h-full {
+  height: 600px; /* Altura fija para asegurar un espaciado adecuado */
 }
 
-.station-name-container {
-  position: relative;
-  width: 100%;
-  height: auto;
-  margin-bottom: 1rem;
-  overflow: visible;
-  text-align: left;
+@media (max-height: 700px) {
+  .h-full {
+    height: 500px;
+  }
 }
 
-.station-name {
-  display: block;
-  position: relative;
-  text-align: center;
-  bottom: -12px;
-  font-weight: bold;
-  white-space: normal; /* Allow multiline */
-  max-width: 80px; /* Control width for wrapping */
-  word-wrap: break-word;
-  hyphens: auto;
-  line-height: 1.1;
-  font-size: 0.7rem;
-}
-
-.passed {
-  color: #999;
-}
-
-.current {
-  color: inherit;
-}
-
-.future {
-  color: #999;
+@media (max-height: 600px) {
+  .h-full {
+    height: 400px;
+  }
 }
 </style>
