@@ -10,17 +10,6 @@
       }"
     ></div>
 
-    <!-- Línea gris para estaciones pasadas -->
-    <div
-      v-if="currentIndex >= 0"
-      class="absolute right-1/4 w-2 transform -translate-x-1/2"
-      :style="{
-        top: '5%',
-        height: `${(currentIndex / (stations.length - 1)) * 84}%`, 
-        backgroundColor: '#999'
-      }"
-    ></div>
-
     <!-- Contenedor de estaciones -->
     <div class="relative z-10 h-full">
       <!-- Estaciones equidistantes -->
@@ -32,15 +21,13 @@
           top: `${5 + (i / (stations.length - 1)) * 80}%`,
           transform: 'translateY(-50%)' /* Centra verticalmente la estación */
         }"
+        @click="selectStation(station)"
       >
-        <div class="relative flex items-center">
+        <div class="relative flex items-center cursor-pointer hover:opacity-80 transition-opacity">
           <!-- Nombre de la estación (posicionado a la izquierda) -->
           <div
-            class="absolute right-1/4 mr-[32px] text-sm font-bold text-right"
-            :class="{
-              'text-gray-400': i < currentIndex,
-              'text-gray-500': i > currentIndex && i !== currentIndex
-            }"
+            class="absolute right-1/4 mr-[32px] font-bold text-right transition-all duration-300"
+            :class="i === currentIndex ? 'text-xl' : 'text-sm text-black dark:text-white'"
             :style="i === currentIndex ? { color: lineColorValue } : {}"
           >
             {{ station.name }}
@@ -48,9 +35,10 @@
           
           <!-- Línea mini horizontal (a la izquierda de la línea principal) -->
           <div 
-            class="absolute right-[calc(25%-2px)] w-[12px] h-[4px]"
+            class="absolute right-[calc(25%-2px)] transition-all duration-300"
+            :class="i === currentIndex ? 'w-[24px] h-[6px]' : 'w-[12px] h-[4px]'"
             :style="{
-              backgroundColor: i < currentIndex ? '#999' : lineColorValue,
+              backgroundColor: lineColorValue,
               right: 'calc(25%)'
             }"
           ></div>
@@ -58,16 +46,22 @@
           <!-- Marcador de correspondencia (círculo) -->
           <div
             v-if="station.correspondence"
-            class="absolute right-14 transform translate-x-10px"
-            style="z-index: 5;"
+            class="absolute transform translate-x-10px"
+            :style="{
+              zIndex: 5,
+              right: i === currentIndex ? 'calc(25% - 15px)' : 'calc(25% - 11px)',
+              }"
           >
             <div
               class="rounded-full"
+              :class="i === currentIndex ? 'scale-125' : ''"
               :style="{
-                width: '14px',
-                height: '14px',
+                width: i === currentIndex ? '22px' : '14px',
+                height: i === currentIndex ? '22px' : '14px',
+                right: i === currentIndex ? 'calc(25% - 30px)' : 'calc(25% - 5px)',
                 backgroundColor: '#fff',
-                border: i < currentIndex ? `2px solid #999` : `2px solid ${lineColorValue}`
+                border: i === currentIndex ? `4px solid ${lineColorValue}` : `2px solid ${lineColorValue}`,
+                transition: 'all 0.3s'
               }"
             ></div>
           </div>
@@ -94,6 +88,15 @@ const props = defineProps({
     default: '11'
   }
 })
+
+const emit = defineEmits(['station-selected'])
+
+// Function to handle station selection
+const selectStation = (station) => {
+  // Get the station name, handling both string and object cases
+  const stationName = typeof station === 'string' ? station : station.name
+  emit('station-selected', stationName)
+}
 
 // Mapa de números de línea a sus colores estándar
 const lineColorValue = computed(() => {
