@@ -32,6 +32,19 @@ export default defineNuxtConfig({
         { name: 'orientation', content: 'portrait' }
       ]
     }
+  },
+
+  runtimeConfig: {
+    tram: {
+      url: 'https://opendata.tram.cat/api/v1/',
+      clientId: 'neilagaliza1@gmail.com',
+      clientSecret: process.env.TRAM_SECRET
+    },  
+    metro: {
+      url: 'https://api.tmb.cat/v1/imetro',
+      appId: '135507ad',
+      appKey: process.env.METRO_API_KEY
+    }
   }
 
 })
