@@ -208,7 +208,7 @@ const fetchTMB = async () => {
   isLoading.value = true
 
   try {
-    const url = `https://api.tmb.cat/v1/imetro/linia/${linea}/estacio/${estacion}?app_id=135507ad&app_key=${claveTMB}`
+    const url = `/api/metro/${linea}/${estacion}`
     const res = await $fetch(url)
     data.value = res
 
@@ -772,9 +772,9 @@ watch(timeMap, (newMap) => {
       <div class="flex flex-row items-center">
         <img src="/Logos/FMB.svg" alt="Logo TMB" class="h-15 mr-2" @click="goToTmb"/> 
         <img :src="getLineLogoPath" :alt="`Línia ${linea}`" class="w-15 mr-5" @click="goToLine(linea)">
-        <h1 class="text-black dark:text-white "><span class="font-bold">De {{ lineEndpoints.first }} a {{ lineEndpoints.last }}</span></h1>
+        <h1 class="text-black dark:text-white ">De <span class="font-bold">{{ lineEndpoints.first }}</span> a <span class="font-bold">{{ lineEndpoints.last }}</span></h1>
       </div>
-      <div class="dark:bg-[#0000003d] bg-[#ffffff3d] rounded-md max-w-[75%] pl-5 mt-5">
+      <div class="dark:bg-[#0000003d] bg-[#ffffff3d] rounded-md max-w-full pl-5 mt-10">
         <FullLine
           :current-station="getStationName"
           :line="linea"
@@ -801,8 +801,8 @@ watch(timeMap, (newMap) => {
         </div>
       </div>
     </div>
-    <div class="grid grid-cols-[65%_35%] gap-4 my-15">
-      <div class="space-y-6 p-4 dark:bg-[#0000003d] bg-[#ffffff3d] rounded-md">
+    <div class="grid grid-cols-[60%_40%] gap-2 my-15">
+      <div class="space-y-6 p-2 dark:bg-[#0000003d] bg-[#ffffff3d] rounded-md">
         <div
           v-for="(dirData, dirId) in directionMap"
           :key="dirId"
@@ -836,7 +836,7 @@ watch(timeMap, (newMap) => {
         </div>
       </div>
 
-      <div class=" dark:bg-[#0000003d] bg-[#ffffff3d] rounded-md items-end">
+      <div class=" dark:bg-[#0000003d] bg-[#ffffff3d] rounded-md items-end p-1 pt-5">
         <MetroLine
           :stations="contextualStations"
           :currentStation="getStationName"
