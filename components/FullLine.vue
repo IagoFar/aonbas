@@ -1,25 +1,25 @@
 <template>
-  <div class="relative h-full overflow-auto">
+  <div class="relative h-[2000px] overflow-auto">
     <!-- Línea vertical principal coloreada -->
     <div 
       class="absolute left-1/8 w-2 transform -translate-x-1/2" 
       :style="{ 
         backgroundColor: lineColorValue,
-        top: '4.75%',
-        bottom: '4.75%',
+        top: '2.9%',
+        bottom: '6.75%',
         left: 'calc(10% - 8px)',
       }"
     ></div>
 
     <!-- Contenedor de estaciones -->
-    <div class="relative z-10 h-full">
+    <div class="relative z-10 h-[2000px]">
       <!-- Estaciones equidistantes -->
       <div
         v-for="(station, i) in lineStations"
         :key="station.name || i"
         class="absolute w-full"
         :style="{
-          top: `${5 + (i / (Math.max(lineStations.length - 1, 1))) * 90}%`,
+          top: `${3 + (i / (Math.max(lineStations.length - 1, 1))) * 90}%`,
           transform: 'translateY(-50%)' /* Centra verticalmente la estación */
         }"
         @click="selectStation(station)"
@@ -27,8 +27,8 @@
         <div class="relative flex items-center cursor-pointer hover:opacity-80 transition-opacity">
           <!-- Nombre de la estación (posicionado a la izquierda) -->
           <div
-            class="absolute left-1/8 ml-2 font-bold text-left transition-all duration-300"
-            :class="isActiveStation(station) ? 'text-xl' : 'text-sm dark:text-white text-black'"
+            class="absolute left-1/8 ml-2 font-bold text-left transition-all duration-300 dark:bg-[#00000010] bg-[#ffffff10] rounded-full px-3 py-1"
+            :class="isActiveStation(station) ? 'text-xl' : 'text-xl dark:text-white text-black'"
             :style="isActiveStation(station) ? { color: lineColorValue } : {}"
           >
             {{ station.name }}
@@ -40,7 +40,7 @@
             :class="isActiveStation(station) ? 'w-[24px] h-[6px]' : 'w-[12px] h-[4px]'"
             :style="{
               backgroundColor: lineColorValue,
-              left: 'calc(10% - 4px)',
+              left: 'calc(10% - 5px)',
             }"
           ></div>
           
@@ -314,24 +314,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.h-full {
-  height: 700px; /* Increased height for full lines */
-  position: relative;
-}
 
-.overflow-auto {
-  overflow-y: auto;
-}
-
-@media (max-height: 800px) {
-  .h-full {
-    height: 600px;
-  }
-}
-
-@media (max-height: 600px) {
-  .h-full {
-    height: 500px;
-  }
-}
 </style>

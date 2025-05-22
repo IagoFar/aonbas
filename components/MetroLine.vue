@@ -1,12 +1,12 @@
 <template>
-  <div class="relative py-4 px-6 h-full">
+  <div class="relative h-full">
     <!-- Línea vertical principal coloreada -->
     <div 
-      class="absolute right-1/4 w-2 transform -translate-x-1/2" 
+      class="absolute right-[calc(15%-12px)] w-2 transform -translate-x-1/2" 
       :style="{ 
         backgroundColor: lineColorValue,
-        top: '5%',
-        bottom: '5%'
+        top: '2%',
+        bottom: '10%'
       }"
     ></div>
 
@@ -26,20 +26,24 @@
         <div class="relative flex items-center cursor-pointer hover:opacity-80 transition-opacity">
           <!-- Nombre de la estación (posicionado a la izquierda) -->
           <div
-            class="absolute right-1/4 mr-[32px] font-bold text-right transition-all duration-300"
-            :class="i === currentIndex ? 'text-xl' : 'text-sm text-black dark:text-white'"
-            :style="i === currentIndex ? { color: lineColorValue } : {}"
+            class="absolute right-[calc(15%+20px)] font-bold text-right transition-all duration-300"
+            :class="i === currentIndex ? 'text-xl' : 'text-sm text-zinc-700 dark:text-zinc-300'"
+            :style="{
+              right: i === currentIndex ? 'calc(15% + 25px)' : 'calc(15% + 20px)',
+              fontSize: i === currentIndex ? '1.0rem' : '0.75rem',
+              color: i === currentIndex ? lineColorValue : {}
+            }"
           >
             {{ station.name }}
           </div>
           
           <!-- Línea mini horizontal (a la izquierda de la línea principal) -->
           <div 
-            class="absolute right-[calc(25%-2px)] transition-all duration-300"
-            :class="i === currentIndex ? 'w-[24px] h-[6px]' : 'w-[12px] h-[4px]'"
+            class="absolute right-[calc(15%-2px)] transition-all duration-300"
+            :class="i === currentIndex ? 'w-[18px] h-[6px]' : 'w-[12px] h-[4px]'"
             :style="{
               backgroundColor: lineColorValue,
-              right: 'calc(25%)'
+              right: 'calc(15%)'
             }"
           ></div>
           
@@ -49,7 +53,7 @@
             class="absolute transform translate-x-10px"
             :style="{
               zIndex: 5,
-              right: i === currentIndex ? 'calc(25% - 15px)' : 'calc(25% - 11px)',
+              right: i === currentIndex ? 'calc(15% - 15px)' : 'calc(15% - 11px)',
               }"
           >
             <div
@@ -58,7 +62,7 @@
               :style="{
                 width: i === currentIndex ? '22px' : '14px',
                 height: i === currentIndex ? '22px' : '14px',
-                right: i === currentIndex ? 'calc(25% - 30px)' : 'calc(25% - 5px)',
+                right: i === currentIndex ? 'calc(15% - 30px)' : 'calc(15% - 5px)',
                 backgroundColor: '#fff',
                 border: i === currentIndex ? `4px solid ${lineColorValue}` : `2px solid ${lineColorValue}`,
                 transition: 'all 0.3s'
