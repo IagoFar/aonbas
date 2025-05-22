@@ -1,5 +1,5 @@
 <template>
-  <div class="relative h-[2000px] overflow-auto">
+  <div class="relative h-[1500px] overflow-auto">
     <!-- Línea vertical principal coloreada -->
     <div 
       class="absolute left-1/8 w-2 transform -translate-x-1/2" 
@@ -12,7 +12,7 @@
     ></div>
 
     <!-- Contenedor de estaciones -->
-    <div class="relative z-10 h-[2000px]">
+    <div class="relative z-10 h-[1500px]">
       <!-- Estaciones equidistantes -->
       <div
         v-for="(station, i) in lineStations"
