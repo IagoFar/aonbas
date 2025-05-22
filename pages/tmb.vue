@@ -699,6 +699,16 @@ const getInterchanges = computed(() => {
   return result;
 });
 
+const goBack = () => {
+  if (route.query.s) {
+    router.replace({ query: { l: linea } })
+  } else if (route.query.l) {
+    router.replace({ query: {} })
+  } else {
+    router.push({ path: '/' })
+  }
+}
+
 const getLineLogoPath = computed(() => {
   if (linea) {
     return `/Logos/L${linea}.svg`
@@ -754,6 +764,13 @@ watch(timeMap, (newMap) => {
 </script>
 <template>
   <div class="p-4 dark:bg-[#1C6962] bg-[#37cbbf] text-black dark:text-white min-h-screen">
+    <div class="mb-4">
+      <button 
+        class="p-1 px-2 bg-[#FFFFFF3d] dark:bg-[#0000003d] text-semibold text-black dark:text-white rounded-lg"
+        @click="goBack"
+      > <- Volver</button>
+    </div>
+
     <!-- Sin query → elige línea -->
     <div v-if="!route.query.l">
       <h2 class="mb-4 font-bold">Selecciona línea</h2>
