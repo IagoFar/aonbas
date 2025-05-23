@@ -8,6 +8,7 @@ const router = useRouter()
 
 // Route parameters
 const stopId = route.query.s
+const selectedLine = route.query.l
 
 // State management
 const data = ref(null)
@@ -15,8 +16,12 @@ const isLoading = ref(false)
 const error = ref(null)
 const stations = ref([])
 const stationMap = ref({})
+const stationsByLine = ref({})
 const interchangeData = ref({})
 const remainingTimes = ref({})
+
+const tripsMap = ref(new Map()) // Maps trip_id to route_id
+const routesMap = ref(new Map()) // Maps route_id to route destination
 
 // Constants for Rodalies lines
 const lines = ['R1', 'R2', 'R3', 'R4', 'R7', 'R8', 'R11', 'R12']
@@ -34,25 +39,166 @@ const loadStationData = async () => {
     Papa.parse(csvData, {
       header: true,
       complete: (results) => {
-        stations.value = results.data.map(station => ({
-          id: station.stop_id,
-          name: station.stop_name,
-          lat: parseFloat(station.stop_lat),
-          lon: parseFloat(station.stop_lon)
-        }))
+        // Initialize the stationsByLine map
+        lines.forEach(line => {
+          stationsByLine.value[line] = []
+        })
         
-        // Create a map for quick lookup
-        stations.value.forEach(station => {
-          stationMap.value[station.id] = station
+        // Group stations by line
+        results.data.forEach(row => {
+          if (row.LINIA && row.ESTACIO && row.STOPID) {
+            // Create station object
+            const station = {
+              id: row.STOPID,
+              name: row.ESTACIO,
+              line: row.LINIA
+            }
+            
+            // Add to the appropriate line array
+            if (stationsByLine.value[row.LINIA]) {
+              stationsByLine.value[row.LINIA].push(station)
+            }
+            
+            // Add to station map for lookup
+            stationMap.value[station.id] = station
+            
+            // Also add to the general stations list
+            // (only if not already present)
+            if (!stations.value.some(s => s.id === station.id)) {
+              stations.value.push(station)
+            }
+          }
+        })
+        
+        // Sort stations alphabetically within each line
+        Object.keys(stationsByLine.value).forEach(line => {
+          stationsByLine.value[line].sort((a, b) => 
+            a.name.localeCompare(b.name)
+          )
         })
         
         console.log('Loaded station data:', stations.value.length, 'stations')
+        console.log('Stations by line:', Object.keys(stationsByLine.value).length, 'lines')
       }
     })
   } catch (error) {
     console.error('Error loading station data:', error)
   }
 }
+
+const loadGTFSData = async () => {
+  try {
+    console.log('Starting GTFS data loading process...')
+    
+    // Load trips.txt and routes.txt files
+    const [tripsResponse, routesResponse] = await Promise.all([
+      fetch('/data/rodalies/gtfs/trips.txt').catch(err => {
+        console.error('Failed to fetch trips.txt:', err)
+        return { text: () => Promise.resolve('') }
+      }),
+      fetch('/data/rodalies/gtfs/routes.txt').catch(err => {
+        console.error('Failed to fetch routes.txt:', err)
+        return { text: () => Promise.resolve('') }
+      })
+    ])
+    
+    const tripsCsvData = await tripsResponse.text()
+    const routesCsvData = await routesResponse.text()
+    
+    if (!tripsCsvData) {
+      console.error('trips.txt data is empty')
+      return
+    }
+    
+    if (!routesCsvData) {
+      console.error('routes.txt data is empty')
+      return
+    }
+    
+    console.log('GTFS files fetched successfully')
+    
+    // Parse trips.txt to map trip_id to route_id
+    Papa.parse(tripsCsvData, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (results.errors && results.errors.length > 0) {
+          console.error('Error parsing trips.txt:', results.errors)
+        }
+        
+        let tripsMapCount = 0
+        results.data.forEach(trip => {
+          if (trip.trip_id && trip.route_id) {
+            // Store the direct mapping
+            tripsMap.value.set(trip.trip_id, trip.route_id)
+            tripsMapCount++
+            
+            // Store normalized version (lowercase)
+            const normalizedTripId = trip.trip_id.trim().toLowerCase()
+            tripsMap.value.set(normalizedTripId, trip.route_id)
+            
+            // Store just the route ID prefix part (e.g., "5101S77564" from "5101S77564R4")
+            const baseId = trip.trip_id.replace(/R\d+$/, '')
+            if (baseId !== trip.trip_id) {
+              tripsMap.value.set(baseId, trip.route_id)
+            }
+          }
+        })
+        console.log(`Loaded ${tripsMapCount} trips from GTFS data`)
+      }
+    })
+    
+    // Parse routes.txt with more robust error handling
+    Papa.parse(routesCsvData, {
+      header: true,
+      skipEmptyLines: true,
+      error: (error) => {
+        console.error('CSV parsing error:', error)
+      },
+      complete: (results) => {
+        if (results.errors && results.errors.length > 0) {
+          console.error('Error parsing routes.txt:', results.errors)
+        }
+        
+        results.data.forEach(route => {
+          if (route.route_id) {
+            // Extract route information, handling missing fields
+            routesMap.value.set(
+              route.route_id, 
+              {
+                name: cleanRouteName(route.route_long_name || ''),
+                shortName: route.route_short_name || '',
+                color: route.route_color || ''
+              }
+            )
+            
+            // Also map by route_short_name if available
+            if (route.route_short_name) {
+              routesMap.value.set(
+                route.route_short_name.trim(),
+                {
+                  name: cleanRouteName(route.route_long_name || ''),
+                  shortName: route.route_short_name || '',
+                  color: route.route_color || ''
+                }
+              )
+            }
+          }
+        })
+        console.log(`Loaded ${routesMap.value.size} routes from GTFS data`)
+      }
+    })
+  } catch (error) {
+    console.error('Error loading GTFS data:', error)
+  }
+}
+
+function cleanRouteName(name) {
+  return name.trim()
+    .replace(/\s+/g, ' ')  // Replace multiple spaces with a single space
+    .replace(/\s*-\s*/g, ' - ') // Standardize dashes
+}
+
 
 // Load interchange data from CSV
 const loadInterchangeData = async () => {
@@ -111,11 +257,19 @@ const fetchRodalies = async () => {
     
     // Set up countdown times
     if (result.nextTrains && result.nextTrains.length > 0) {
+      console.log('First train trip ID:', result.nextTrains[0].tripId)
+      console.log('Trip ID in tripsMap?', tripsMap.value.has(result.nextTrains[0].tripId))
+
       result.nextTrains.forEach(train => {
         const uniqueId = train.tripId
         const arrivalTime = convertTimeToSeconds(train.arrival)
         const now = convertTimeToSeconds(getCurrentTime())
         
+        console.log(
+          `Trip ID: ${train.tripId}, ` + 
+          `Destination: ${getDestinationFromTripId(train.tripId)}`
+        )
+
         // Calculate seconds until arrival
         const remainingSeconds = arrivalTime > now 
           ? arrivalTime - now 
@@ -123,6 +277,7 @@ const fetchRodalies = async () => {
           
         remainingTimes.value[uniqueId] = remainingSeconds
       })
+      
     }
     
     console.log('API response:', data.value)
@@ -174,6 +329,14 @@ const goBack = () => {
     router.push({ path: '/' })
   }
 }
+
+const filteredStations = computed(() => {
+  if (!selectedLine) {
+    return stations.value
+  }
+  
+  return stationsByLine.value[selectedLine] || []
+})
 
 // Get station name from station ID
 const getStationName = computed(() => {
@@ -246,25 +409,114 @@ const getInterchanges = computed(() => {
   return result
 })
 
-// Get path to logo image
-const getLogoPath = (interchange) => {
-  if (!interchange) return ''
+// Format arrival time to HH:MM format
+const formatArrivalTime = (timeStr) => {
+  if (!timeStr) return '--:--';
   
-  const { type, line } = interchange
-  
-  switch (type) {
-    case 'metro':
-      return `/Logos/${line}.svg`
-    case 'renfe':
-      return `/Logos/${line}.svg`
-    case 'fgc':
-      return `/Logos/${line}.svg`
-    case 'tram':
-      return `/Logos/${line}.svg`
-    default:
-      return ''
+  // Handle format "HH:MM:SS"
+  const parts = timeStr.split(':');
+  if (parts.length >= 2) {
+    return `${parts[0]}:${parts[1]}`;
   }
+  
+  return timeStr;
+};
+
+// Update the getDestinationFromTripId function with better trip ID matching
+const getDestinationFromTripId = (tripId) => {
+  if (!tripId) return 'Desconegut'
+  
+  console.log(`Looking up destination for trip ID: "${tripId}"`)
+  
+  // Extract line code for fallback options
+  const line = getLineFromTripId(tripId)
+  
+  // Strategy 1: Exact match
+  let routeId = tripsMap.value.get(tripId)
+  
+  // Strategy 2: Try normalized version (lowercase)
+  if (!routeId) {
+    const normalizedTripId = tripId.trim().toLowerCase()
+    routeId = tripsMap.value.get(normalizedTripId)
+  }
+  
+  // Strategy 3: Try line code as route ID
+  if (!routeId && line !== 'R?') {
+    if (routesMap.value.has(line)) {
+      routeId = line
+    }
+  }
+  
+  // Strategy 4: Try without line suffix
+  if (!routeId) {
+    const baseId = tripId.replace(/R\d+$/, '')
+    if (baseId !== tripId) {
+      routeId = tripsMap.value.get(baseId)
+    }
+  }
+  
+  // Strategy 5: Try matching by prefix
+  if (!routeId) {
+    // Get the first part of the ID (before any underscore)
+    const prefix = tripId.split('_')[0]
+    // Look for any trip ID that starts with this prefix
+    if (prefix && prefix.length > 4) {
+      for (const [key, value] of tripsMap.value.entries()) {
+        if (key.startsWith(prefix)) {
+          routeId = value
+          console.log(`Found match by prefix ${prefix} -> ${routeId}`)
+          break
+        }
+      }
+    }
+  }
+  
+  // If route ID found, get destination from routes map
+  if (routeId && routesMap.value.has(routeId)) {
+    const route = routesMap.value.get(routeId)
+    if (route && route.name) {
+      return route.name
+    }
+  }
+  
+  console.log(`No GTFS match found for ${tripId}, using line fallback`)
+  
+  // Fall back to line-specific destinations
+  const destinations = {
+    'R1': 'Maçanet-Massanes / Molins de Rei',
+    'R2': 'Sant Celoni / Aeroport',
+    'R2Nord': 'Maçanet-Massanes / Sant Celoni',
+    'R2Sud': 'Vilanova / Aeroport',
+    'R3': 'Puigcerdà / L\'Hospitalet',
+    'R4': 'Manresa / Sant Vicenç',
+    'R7': 'Cerdanyola Universitat / Barcelona',
+    'R8': 'Martorell / Granollers Centre',
+    'R11': 'Portbou / Barcelona',
+    'R12': 'Lleida / L\'Hospitalet',
+    'R13': 'Cerbère / Barcelona',
+    'R14': 'Lleida / Barcelona',
+    'R15': 'Riba-roja d\'Ebre / Barcelona',
+    'R16': 'Tortosa / Barcelona',
+    'R17': 'Portbou / Barcelona'
+  }
+  
+  return destinations[line] || 'Desconegut'
 }
+
+// Add this helper for day indication - it was missing
+const getDayIndicator = (timeStr) => {
+  if (!timeStr) return '';
+  
+  const now = new Date();
+  const hours = parseInt(timeStr.split(':')[0]);
+  
+  // If current time is PM and arrival time is AM, it's likely tomorrow
+  if (now.getHours() >= 18 && hours <= 6) {
+    return 'Demà';
+  }
+  
+  return 'Avui';
+};
 
 // Navigate to another transit app
 const switchToLine = (line) => {
@@ -300,14 +552,17 @@ const tick = () => {
 
 // Initialize the component
 onMounted(async () => {
-  await loadStationData()
-  await loadInterchangeData()
+  
+  await Promise.all([
+    loadStationData(),
+    loadInterchangeData(),
+    loadGTFSData() 
+  ])
   
   if (stopId) {
     fetchRodalies()
     
     // Set up timers
-    refreshTimer = setInterval(fetchRodalies, 30000) // Refresh every 30 seconds
     countdownTimer = setInterval(tick, 1000) // Update countdown every second
   }
 })
@@ -317,10 +572,17 @@ onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer)
   if (countdownTimer) clearInterval(countdownTimer)
 })
+
+watch(() => route.query.line, (newLine) => {
+  if (newLine && stationsByLine.value[newLine]) {
+    console.log(`Showing stations for line ${newLine}`)
+  }
+})
+
 </script>
 
 <template>
-  <div class="p-4 min-h-screen dark:bg-[#DC0032] bg-[#f58220] text-black dark:text-white">
+  <div class="p-4 min-h-screen dark:bg-[#1C6962] bg-[#37cbbf] text-black dark:text-white">
     <div class="mb-4">
       <button 
         class="p-1 px-2 bg-[#FFFFFF3d] dark:bg-[#0000003d] text-semibold text-black dark:text-white rounded-lg"
@@ -341,7 +603,12 @@ onUnmounted(() => {
           <div
             v-for="line in lines"
             :key="line"
-            class="p-2 rounded-lg bg-[#FFFFFF3d] dark:bg-[#0000003d] cursor-pointer hover:bg-[#FFFFFF6d] dark:hover:bg-[#0000006d]"
+            class="p-2 rounded-lg"
+            :class="[
+              selectedLine === line ? 
+                'bg-[#FFFFFF70] dark:bg-[#00000070]' : 
+                'bg-[#FFFFFF3d] dark:bg-[#0000003d]'
+            ]"
             @click="router.push({ query: { line } })"
           >
             <img :src="`/Logos/${line}.svg`" :alt="line" class="h-8" />
@@ -349,16 +616,39 @@ onUnmounted(() => {
         </div>
       </div>
       
-      <h2 class="mb-2 font-medium">Estacions:</h2>
+      <!-- Show line name if line is selected -->
+      <div v-if="selectedLine" class="mb-4">
+        <h2 class="mb-2 font-medium flex items-center">
+          <img :src="`/Logos/${selectedLine}.svg`" :alt="selectedLine" class="h-6 mr-2" />
+          <span>Estacions de la línia {{ selectedLine }}:</span>
+          <button 
+            class="ml-2 text-sm p-1 rounded-md bg-[#FFFFFF3d] dark:bg-[#0000003d]"
+            @click="router.push({ query: {} })"
+          >
+            Mostrar totes
+          </button>
+        </h2>
+      </div>
+      
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <div
-          v-for="station in stations"
+          v-for="station in filteredStations"
           :key="station.id"
           @click="router.push({ query: { s: station.id } })"
           class="p-3 bg-[#FFFFFF3d] dark:bg-[#0000003d] rounded-lg shadow cursor-pointer hover:bg-[#FFFFFF6d] dark:hover:bg-[#00000060] transition"
         >
-          <h3 class="font-medium text-lg">{{ station.name }}</h3>
-          <div class="text-sm opacity-75">ID: {{ station.id }}</div>
+          <div class="flex justify-between items-center">
+            <h3 class="font-medium text-lg">{{ station.name }}</h3>
+            <img 
+              v-if="station.line" 
+              :src="`/Logos/${station.line}.svg`" 
+              :alt="station.line" 
+              class="h-6 w-auto ml-2" 
+            />
+          </div>
+          <div class="text-sm opacity-75 flex items-center gap-1">
+            <span class="bg-[#FFFFFF30] dark:bg-[#00000030] px-2 rounded-md">ID: {{ station.id }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -382,22 +672,31 @@ onUnmounted(() => {
             class="p-3 bg-[#FFFFFF3d] dark:bg-[#0000003d] rounded shadow"
           >
             <div class="flex justify-between items-center">
-              <div>
+              <div class="flex flex-col">
                 <div class="font-semibold flex items-center">
+                  <!-- Route logo -->
                   <img 
                     :src="`/Logos/${getLineFromTripId(train.tripId)}.svg`" 
                     :alt="getLineFromTripId(train.tripId)" 
-                    class="h-6 mr-2" 
+                    class="h-8 mr-2" 
                   />
-                  <span>{{ getLineFromTripId(train.tripId) }}</span>
-                </div>
-                <div class="text-sm text-gray-700 dark:text-gray-300">
-                  ID: {{ train.tripId }}
+                  <!-- Line info -->
+                  <div class="flex flex-col">
+                    <span class="text-lg">{{ getLineFromTripId(train.tripId) }}</span>
+                    <!-- Destination -->
+                    <span class="text-sm font-normal">
+                      {{ getDestinationFromTripId(train.tripId) || "Destí desconegut" }}
+                    </span>
+                  </div>
                 </div>
               </div>
+              
               <div class="flex flex-col items-end">
-                <div class="text-2xl font-bold">{{ formatTime(remainingTimes[train.tripId]) }}</div>
-                <div class="text-xs">Arribada: {{ train.arrival }}</div>
+                <!-- Arrival time - larger and more prominent -->
+                <div class="text-xl font-bold">{{ formatArrivalTime(train.arrival) }}</div>
+                <div class="text-xs text-gray-600 dark:text-gray-400">
+                  {{ getDayIndicator(train.arrival) }}
+                </div>
               </div>
             </div>
           </div>
@@ -495,7 +794,7 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
+ 
 <style scoped>
 /* Add any scoped styles here */
 </style>
