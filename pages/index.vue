@@ -17,6 +17,12 @@
         <h2 class="text-white text-2xl font-bold">{{ transport }}</h2>
       </div>
     </div>
+    <div>
+      <button
+      @click="router.push('/testapi')">
+        Test API Page
+      </button>
+    </div>
   </div>
 </template>
 

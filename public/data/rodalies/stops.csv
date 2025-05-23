@@ -1,0 +1,245 @@
+LINIA,ESTACIO,STOPID
+R1,L'Hospitalet de Llobregat,72305
+R1,Barcelona - Sants,71801
+R1,Barcelona - Pl. Catalunya,78805
+R1,Barcelona - Arc de Triomf,78804
+R1,Barcelona - El Clot,79009
+R1,St. Adrià de Besòs,79403
+R1,Badalona,79404
+R1,Montgat,79405
+R1,Montgat Nord,79406
+R1,El Masnou,79407
+R1,Ocata,79408
+R1,Premià de Mar,79409
+R1,Vilassar de Mar,79410
+R1,Cabrera de Mar - Vilassar de Mar,79412
+R1,Mataró,79500
+R1,St. Andreu de Llavaneres,79501
+R1,Caldes d'Estrac,79502
+R1,Arenys de Mar,79600
+R1,Canet de Mar,79601
+R1,St. Pol de Mar,79602
+R1,Calella,79603
+R1,Pineda de Mar,79604
+R1,Santa Susanna,79608
+R1,Malgrat de Mar,79605
+R1,Blanes,79606
+R1,Tordera,79607
+R1,Maçanet – Massanes,79200
+R2,Granollers Centre,79100
+R2,Montmeló,79007
+R2,Mollet-St.Fost,79006
+R2,La Llagosta,79011
+R2,Montcada i Reixac,79005
+R2,Barcelona - Sant Andreu,79004
+R2,Barcelona - El Clot,79009
+R2,Barcelona - Estació de França,79400
+R2,Barcelona - Passeig de Gracia,71802
+R2,Barcelona - Sants,71801
+R2,Bellvitge | Gornal,71708
+R2,El Prat de Llobregat,71707
+R2,Aeroport,72400
+R2,Viladecans,71709
+R2,Gavà,71706
+R2,Castelldefels,71705
+R2N,Maçanet - Massanes,79200
+R2N,Hostalric,79107
+R2N,Riells i Viabrea - Breda,79106
+R2N,Gualba,79105
+R2N,Sant Celoni,79104
+R2N,Palautordera,79103
+R2N,Llinars del Vallès,79102
+R2N,Cardedeu,79101
+R2N,Les Franqueses-Granollers Nord,79109
+R2N,Granollers Centre,79100
+R2N,Montmeló,79007
+R2N,Mollet-St.Fost,79006
+R2N,La Llagosta,79011
+R2N,Montcada i Reixac,79005
+R2N,Barcelona - Sant Andreu,79004
+R2N,Barcelona - El Clot,79009
+R2N,Barcelona - Estació de França,79400
+R2N,Barcelona - Passeig de Gràcia,71802
+R2N,Barcelona - Sants,71801
+R2N,Bellvitge | Gornal,71708
+R2N,El Prat de Llobregat,71707
+R2N,Aeroport,72400
+R2S,Barcelona - Estació de França,79400
+R2S,Barcelona - Passeig de Gràcia,71802
+R2S,Barcelona - Sants,71801
+R2S,Bellvitge | Gornal,71708
+R2S,El Prat de Llobregat,71707
+R2S,Aeroport,72400
+R2S,Viladecans,71709
+R2S,Gavà,71706
+R2S,Castelldefels,71705
+R2S,Platja de Castelldefels,71704
+R2S,Garraf,71703
+R2S,Sitges,71701
+R2S,Vilanova i la Geltrú,71700
+R2S,Cubelles,71604
+R2S,Cunit,71603
+R2S,Segur de Calafell,71602
+R2S,Calafell,71601
+R2S,St.Vicenç de Calders,71600
+R3,L'Hospitalet de Llobregat,72305
+R3,Barcelona - Sants,71801
+R3,Barcelona - Pl. Catalunya,78805
+R3,Barcelona - Arc de Triomf,78804
+R3,Barcelona - La Sagrera-Meridiana,78806
+R3,Barcelona - Fabra i Puig,78802
+R3,Barcelona - Torre Baró | Vallbona,78801
+R3,Montcada Bifurcació,78800
+R3,Montcada Ripollet,77002
+R3,Sta. Perpètua de Mogoda La Florida,77003
+R3,Mollet Sta. Rosa,77004
+R3,Parets del Vallès,77005
+R3,Granollers - Canovelles,77006
+R3,Les Franqueses del Vallès,77100
+R3,La Garriga,77102
+R3,Figaró,77103
+R3,St. Martí de Centelles,77104
+R3,Centelles,77105
+R3,Balenyà - Els Hostalets,77106
+R3,Balenyà - Tona - Seva,77107
+R3,Vic,77109
+R3,Manlleu,77110
+R3,Torelló,77111
+R3,Borgonyà,77112
+R3,St. Quirze de Besora,77113
+R3,La Farga de Bebié,77114
+R3,Ripoll,77200
+R3,Campdevànol,77301
+R3,Ribes de Freser,77303
+R3,Planoles,77304
+R3,Toses,77305
+R3,La Molina,77306
+R3,Urtx - Alp,77307
+R3,Puigcerdà,77309
+R3,La Tor de Querol-Enveig,77310
+R4,St. Vicenç de Calders,71600
+R4,El Vendrell,72201
+R4,L'Arboç,72202
+R4,Els Monjos,72203
+R4,Vilafranca del Penedès,72204
+R4,La Granada,72205
+R4,Lavern-Subirats,72206
+R4,St. Sadurní d'Anoia,72207
+R4,Gelida,72208
+R4,Martorell Central,72209
+R4,Castellbisbal,72210
+R4,El Papiol,72211
+R4,Molins de Rei,72300
+R4,St. Feliu de Llobregat,72301
+R4,St. Joan Despí,72302
+R4,Cornellà,72303
+R4,L'Hospitalet de Llobregat,72305
+R4,Barcelona - Sants,71801
+R4,Barcelona - Pl. Catalunya,78805
+R4,Barcelona - Arc de Triomf,78804
+R4,Barcelona - La Sagrera-Meridiana,78806
+R4,Barcelona - Fabra i Puig,78802
+R4,Barcelona - Torre Baró | Vallbona,78801
+R4,Montcada Bifurcació,78800
+R4,Montcada i Reixac-Manresa,78708
+R4,Montcada i Reixac-Sta. Maria,78707
+R4,Cerdanyola del Vallès,78706
+R4,Barberà del Vallès,78705
+R4,Sabadell Sud,78703
+R4,Sabadell Centre,78704
+R4,Sabadell Nord,78709
+R4,Terrassa Est,78710
+R4,Terrassa Estació del Nord,78700
+R4,St. Miquel de Gonteres,78610
+R4,Viladecavalls,78609
+R4,Vacarisses-Torreblanca,78607
+R4,Vacarisses,78606
+R4,Castellbell i el Vilar-Monistrol de Montserrat,78605
+R4,St. Vicenç de Castellet,78604
+R4,Manresa,78600
+R7,Barcelona - Fabra i Puig,78802
+R7,Barcelona - Torre Baró | Vallbona,78801
+R7,Montcada Bifurcació,78800
+R7,Montcada i Reixac-Manresa,78708
+R7,Montcada i Reixac-Sta. Maria,78707
+R7,Cerdanyola del Vallès,78706
+R7,Cerdanyola Universitat,72503
+R8,Martorell Central,72209
+R8,Castellbisbal,72210
+R8,Rubí Can Vallhonrat,72501
+R8,Sant Cugat Coll Favà,72502
+R8,Cerdanyola Universitat,72503
+R8,Santa Perpètua de Mogoda-Riera de Caldes,72508
+R8,Mollet - Sant Fost,79006
+R8,Montmeló,79007
+R8,Granollers Centre,79100
+R11,Barcelona - Sants,71801
+R11,Barcelona - Passeig de Gràcia,71802
+R11,Barcelona - El Clot,79009
+R11,Barcelona - Sant Andreu,79004
+R11,Granollers Centre,79100
+R11,Sant Celoni,79104
+R11,Gualba,79105
+R11,Riells i Viabrea - Breda,79106
+R11,Hostalric,79107
+R11,Maçanet -Massanes,79200
+R11,Sils,79202
+R11,Caldes de Malavella,79203
+R11,Riudellots,79204
+R11,Fornells de la Selva,79205
+R11,Girona,79300
+R11,Celrà,79301
+R11,Bordils - Juià,79302
+R11,Flaçà,79303
+R11,Sant Jordi Desvalls,79304
+R11,Camallera,79305
+R11,Sant Miquel de Fluvià,79306
+R11,Vilamalla,79308
+R11,Figueres,79309
+R11,Vilajuïga,79311
+R11,Llançà,79312
+R11,Colera,79314
+R11,Portbou,79315
+R11,Cerbère,79316
+R12,L'Hospitalet de Llobregat,72305
+R12,Barcelona - Sants,71801
+R12,Barcelona - Pl. Catalunya,78805
+R12,Barcelona - Arc de Triomf,78804
+R12,Barcelona - La Sagrera-Meridiana,78806
+R12,Barcelona - Fabra i Puig,78802
+R12,Barcelona - Torre Baró | Vallbona,78801
+R12,Montcada Bifurcació,78800
+R12,Montcada i Reixac-Manresa,78708
+R12,Montcada i Reixac-Sta. Maria,78707
+R12,Cerdanyola del Vallès,78706
+R12,Barberà del Vallès,78705
+R12,Sabadell Sud,78703
+R12,Sabadell Centre,78704
+R12,Sabadell Nord,78709
+R12,Terrassa Est,78710
+R12,Terrassa Estació del Nord,78700
+R12,St. Miquel de Gonteres,78610
+R12,Viladecavalls,78609
+R12,Vacarisses-Torreblanca,78607
+R12,Vacarisses,78606
+R12,Castellbell i el Vilar-Monistrol de Montserrat,78605
+R12,St. Vicenç de Castellet,78604
+R12,Manresa,78600
+R12,Rajadell,78506
+R12,Aguilar de Segarra,78505
+R12,Seguers - Sant Pere Sallavinera,78504
+R12,Calaf,78503
+R12,Sant Martí Sesgueioles,78502
+R12,Sant Guim de Freixenet,78501
+R12,Cervera,78500
+R12,Tàrrega,78408
+R12,Anglesola,78407
+R12,Bellpuig,78406
+R12,Castellnou de Seana,78405
+R12,Golmés,78404
+R12,Mollerussa,78403
+R12,Fondarella,78402
+R12,Sidamon,78402
+R12,Bell-lloc d'Urgell,78402
+R12,Lleida - Pirineus,78400
+R12,Lleida,78400
