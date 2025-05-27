@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import papa from 'papaparse'
+import { parse } from 'csv-parse/browser/esm/sync'
 
 // Parámetros de ruta
 const route = useRoute()
@@ -43,8 +43,8 @@ const loadInterchangesData = async () => {
   try {
     const res = await fetch('/data/info_stations.csv')
     const text = await res.text()
-    const data = papa.parse(text, { header: true })
-    stationInfo.value = data.data
+    const data = parse(text, { columns: true })
+    stationInfo.value = data
   } catch (e) {
     console.error('Error loading interchanges data:', e)
   }
@@ -71,7 +71,7 @@ const findInterchanges = (stopName: string | null) => {
   // Parse metro lines
   if (station.LINIES_METRO) {
     const lines = station.LINIES_METRO.match(/L\d+[NS]?|FM/g) || []
-    currentStationInterchanges.value.metro = lines.map(line => ({
+    currentStationInterchanges.value.metro = lines.map((line: string)  => ({
       type: 'metro',
       line
     }))
@@ -80,7 +80,7 @@ const findInterchanges = (stopName: string | null) => {
   // Parse renfe lines
   if (station.LINIES_RENFE) {
     const lines = station.LINIES_RENFE.match(/R\d+|RL\d+/g) || []
-    currentStationInterchanges.value.renfe = lines.map(line => ({
+    currentStationInterchanges.value.renfe = lines.map((line: string) => ({
       type: 'renfe',
       line
     }))
@@ -89,7 +89,7 @@ const findInterchanges = (stopName: string | null) => {
   // Parse FGC lines
   if (station.LINIES_FGC) {
     const lines = station.LINIES_FGC.match(/[LS]\d+|R[5-6]|R50|R60/g) || []
-    currentStationInterchanges.value.fgc = lines.map(line => ({
+    currentStationInterchanges.value.fgc = lines.map((line: string) => ({
       type: 'fgc',
       line
     }))
@@ -99,8 +99,8 @@ const findInterchanges = (stopName: string | null) => {
   if (station.LINIES_TRAM) {
     const lines = station.LINIES_TRAM.match(/T\d+/g) || []
     currentStationInterchanges.value.tram = lines
-      .filter(line => line !== selectedLine.value)
-      .map(line => ({
+      .filter((line: string) => line !== selectedLine.value)
+      .map((line: string) => ({
         type: 'tram',
         line
       }))
@@ -116,7 +116,7 @@ const getInterchanges = computed(() => {
   ]
 })
 
-const getLogoPath = (interchange) => {
+const getLogoPath = (interchange: { type: string; line: string }) => {
   if (!interchange) return '';
   
   const { type, line } = interchange;
@@ -135,7 +135,7 @@ const getLogoPath = (interchange) => {
   }
 };
 
-function switchToLine(line) {
+function switchToLine(line: string) {
   if (line.startsWith('T')) {
     // Switch to tram line
     router.push({
@@ -152,13 +152,15 @@ function switchToLine(line) {
 }
 
 
-const fetchStopsForLine = async (lineId: string) => {
+type TramLine = 'T1' | 'T2' | 'T3' | 'T4' | 'T5' | 'T6'
+
+const fetchStopsForLine = async (lineId: TramLine | 'all') => {
   if (lineId === 'all') {
     orderedStops.value = []
     return
   }
 
-  const lineMap = { T1: 1, T2: 2, T3: 3, T4: 4, T5: 5, T6: 6 } // según ID reales
+  const lineMap: Record<TramLine, number> = { T1: 1, T2: 2, T3: 3, T4: 4, T5: 5, T6: 6 }
   const lineApiId = lineMap[lineId]
 
   try {
@@ -293,8 +295,8 @@ function updateRemainingTimes() {
 const loadData = async () => {
   const res = await fetch('/data/tram/Stops.csv')
   const text = await res.text()
-  const data = papa.parse(text, { header: true })
-  return data.data
+  const data = parse(text, { columns: true })
+  return data
 }
 
 const goBack = () => {
@@ -323,6 +325,8 @@ onMounted(() => {
   initializeStops().then(() => {
     if (stopCode) {
       fetchTramBoth()
+      const stopName = getStopName(stopCode)
+      findInterchanges(stopName)
     } else {
       router.replace({ path: '/tram' })
     }
@@ -337,14 +341,16 @@ onUnmounted(() => {
   clearInterval(countdownTimer)
 })
 
-watch(selectedLine, fetchStopsForLine, { immediate: true })
-watch(stopCode, () => {
-  if (stopCode && stops.value) {
-    const stopName = getStopName(stopCode)
+watch(selectedLine, (newLine) => {
+  fetchStopsForLine(newLine as TramLine | 'all')
+}, { immediate: true })
+
+watch(() => route.query.s, (newCode) => {
+  if (newCode && stops.value) {
+    const stopName = getStopName(newCode as string)
     findInterchanges(stopName)
   }
 })
-
 
 // Helpers para formato
 const fourNext = computed(() => arrivals.value.slice(0, 4))

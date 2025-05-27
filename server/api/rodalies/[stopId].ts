@@ -1,8 +1,7 @@
 import { defineEventHandler } from 'h3'
 import fs from 'fs/promises'
 import path from 'path'
-import Papa from 'papaparse'
-import { updateRodaliesGTFS } from '@/utils/updateRodaliesGTFS'
+import { parse } from 'csv-parse/browser/esm/sync'
 import { fileURLToPath } from 'url'
 
 let stopTimes: Array<any> = []
@@ -18,26 +17,20 @@ async function initGtfs() {
     const stopsPath = path.join(base, 'stops.txt')
     const stopTimesPath = path.join(base, 'stop_times.txt')
 
-    let needsUpdate = false
-
+    // Verify files exist without download option
     try {
       await Promise.all([
         fs.access(stopsPath),
         fs.access(stopTimesPath)
       ])
     } catch (err) {
-      console.log('GTFS data missing or inaccessible, downloading...')
-      needsUpdate = true
+      console.error('GTFS data files not found. Please ensure the GTFS data files are present at:', base)
+      throw new Error('GTFS data files missing or inaccessible')
     }
 
-    if (needsUpdate) {
-      await updateRodaliesGTFS()
-      console.log('GTFS data updated successfully')
-    }
-
-    // Parse GTFS data
+    // Parse GTFS data - fixed to use synchronous parse correctly
     const stopsCsv = await fs.readFile(stopsPath, 'utf-8')
-    const stopsData = Papa.parse(stopsCsv, { header: true }).data as any[]
+    const stopsData = parse(stopsCsv, { columns: true }) // Removed .data access
     stopsMap.clear()
     stopsData.forEach(r => {
       if (r.stop_id && r.stop_name) {
@@ -46,12 +39,12 @@ async function initGtfs() {
     })
 
     const timesCsv = await fs.readFile(stopTimesPath, 'utf-8')
-    stopTimes = Papa.parse(timesCsv, { header: true }).data as any[]
+    stopTimes = parse(timesCsv, { columns: true }) // Removed .data access
 
     initialized = true
     lastGtfsUpdateCheck = Date.now()
     // Output the data absolute location
-    console.log('GTFS data initialized successfully' + new Date(lastGtfsUpdateCheck).toLocaleString())
+    console.log('GTFS data initialized successfully at ' + new Date(lastGtfsUpdateCheck).toLocaleString())
     console.log('GTFS data location:', stopsPath, stopTimesPath)
   } catch (error) {
     console.error('Error initializing GTFS data:', error)

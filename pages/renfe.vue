@@ -36,53 +36,54 @@ const loadStationData = async () => {
     const response = await fetch('/data/rodalies/stops.csv')
     const csvData = await response.text()
     
-    parse(csvData, {
-      columns: true,
-      complete: (results) => {
-        // Initialize the stationsByLine map
-        lines.forEach(line => {
-          stationsByLine.value[line] = []
-        })
+    // Parse CSV synchronously - the result is the data array directly
+    const results = parse(csvData, { columns: true })
+    
+    // Initialize the stationsByLine map
+    lines.forEach(line => {
+      stationsByLine.value[line] = []
+    })
+    
+    // Group stations by line
+    results.forEach(row => {
+      if (row.LINIA && row.ESTACIO && row.STOPID) {
+        // Create station object
+        const station = {
+          id: row.STOPID,
+          name: row.ESTACIO,
+          line: row.LINIA
+        }
         
-        // Group stations by line
-        results.data.forEach(row => {
-          if (row.LINIA && row.ESTACIO && row.STOPID) {
-            // Create station object
-            const station = {
-              id: row.STOPID,
-              name: row.ESTACIO,
-              line: row.LINIA
-            }
-            
-            // Add to the appropriate line array
-            if (stationsByLine.value[row.LINIA]) {
-              stationsByLine.value[row.LINIA].push(station)
-            }
-            
-            // Add to station map for lookup
-            stationMap.value[station.id] = station
-            
-            // Also add to the general stations list
-            // (only if not already present)
-            if (!stations.value.some(s => s.id === station.id)) {
-              stations.value.push(station)
-            }
-          }
-        })
+        // Add to the appropriate line array
+        if (stationsByLine.value[row.LINIA]) {
+          stationsByLine.value[row.LINIA].push(station)
+        }
         
-        // Sort stations alphabetically within each line
-        Object.keys(stationsByLine.value).forEach(line => {
-          stationsByLine.value[line].sort((a, b) => 
-            a.name.localeCompare(b.name)
-          )
-        })
+        // Add to station map for lookup
+        stationMap.value[station.id] = station
         
-        console.log('Loaded station data:', stations.value.length, 'stations')
-        console.log('Stations by line:', Object.keys(stationsByLine.value).length, 'lines')
+        // Also add to the general stations list
+        // (only if not already present)
+        if (!stations.value.some(s => s.id === station.id)) {
+          stations.value.push(station)
+        }
       }
     })
+    
+    // Sort stations alphabetically within each line
+    Object.keys(stationsByLine.value).forEach(line => {
+      stationsByLine.value[line].sort((a, b) => 
+        a.name.localeCompare(b.name)
+      )
+    })
+    
+    console.log('Loaded station data:', stations.value.length, 'stations')
+    console.log('Stations by line:', Object.keys(stationsByLine.value).length, 'lines')
+    
+    return true
   } catch (error) {
     console.error('Error loading station data:', error)
+    return false
   }
 }
 
@@ -99,40 +100,41 @@ const loadInterchangeData = async () => {
     const response = await fetch('/data/info_stations.csv')
     const csvData = await response.text()
     
-    parse(csvData, {
-      columns: true,
-      complete: (results) => {
-        results.data.forEach(station => {
-          if (station.NOM_RENFE) {
-            // Parse metro lines
-            const metroLines = station.LINIES_METRO ? 
-              station.LINIES_METRO.match(/L[0-9]+[NS]*/g) : [];
-            
-            // Parse Renfe lines
-            const renfeLines = station.LINIES_RENFE ? 
-              station.LINIES_RENFE.match(/R[0-9]+|RG[0-9]+/g) : [];
-            
-            // Parse FGC lines
-            const fgcLines = station.LINIES_FGC ? 
-              station.LINIES_FGC.match(/[SLR][0-9]+|RL[0-9]+/g) : [];
-            
-            // Parse Tram lines
-            const tramLines = station.LINIES_TRAM ? 
-              station.LINIES_TRAM.match(/T[0-9]+/g) : [];
-            
-            interchangeData.value[station.NOM_RENFE] = {
-              metro: metroLines || [],
-              renfe: renfeLines || [], 
-              fgc: fgcLines || [],
-              tram: tramLines || []
-            }
-          }
-        })
-        console.log('Loaded interchange data:', Object.keys(interchangeData.value).length, 'stations')
+    // Parse CSV synchronously - the result is the data array directly
+    const results = parse(csvData, { columns: true })
+    
+    results.forEach(station => {
+      if (station.NOM_RENFE) {
+        // Parse metro lines
+        const metroLines = station.LINIES_METRO ? 
+          station.LINIES_METRO.match(/L[0-9]+[NS]*/g) : [];
+        
+        // Parse Renfe lines
+        const renfeLines = station.LINIES_RENFE ? 
+          station.LINIES_RENFE.match(/R[0-9]+|RG[0-9]+/g) : [];
+        
+        // Parse FGC lines
+        const fgcLines = station.LINIES_FGC ? 
+          station.LINIES_FGC.match(/[SLR][0-9]+|RL[0-9]+/g) : [];
+        
+        // Parse Tram lines
+        const tramLines = station.LINIES_TRAM ? 
+          station.LINIES_TRAM.match(/T[0-9]+/g) : [];
+        
+        interchangeData.value[station.NOM_RENFE] = {
+          metro: metroLines || [],
+          renfe: renfeLines || [], 
+          fgc: fgcLines || [],
+          tram: tramLines || []
+        }
       }
     })
+    
+    console.log('Loaded interchange data:', Object.keys(interchangeData.value).length, 'stations')
+    return true
   } catch (error) {
     console.error('Error loading interchange data:', error)
+    return false
   }
 }
 
@@ -142,27 +144,24 @@ const loadTripsData = async () => {
     const response = await fetch('/data/rodalies/gtfs/trips.txt')
     const csvData = await response.text()
     
-    parse(csvData, {
-      columns: true,
-      complete: (results) => {
-        // Clear existing data first
-        tripsMap.value.clear()
-        
-        // Populate trips map (trip_id -> route_id)
-        results.data.forEach(row => {
-          if (row.trip_id && row.route_id) {
-            tripsMap.value.set(row.trip_id, row.route_id.trim())
-          }
-        })
-        
-        console.log(`Loaded trips data: ${tripsMap.value.size} entries`)
-      },
-      error: (error) => {
-        console.error('Error parsing trips data:', error)
+    // Parse CSV synchronously - the result is the data array directly
+    const results = parse(csvData, { columns: true })
+    
+    // Clear existing data first
+    tripsMap.value.clear()
+    
+    // Populate trips map (trip_id -> route_id)
+    results.forEach(row => {
+      if (row.trip_id && row.route_id) {
+        tripsMap.value.set(row.trip_id, row.route_id.trim())
       }
     })
+    
+    console.log(`Loaded trips data: ${tripsMap.value.size} entries`)
+    return true
   } catch (error) {
     console.error('Error loading trips data:', error)
+    return false
   }
 }
 
@@ -172,34 +171,31 @@ const loadRoutesData = async () => {
     const response = await fetch('/data/rodalies/gtfs/routes.txt')
     const csvData = await response.text()
     
-    parse(csvData, {
-      columns: true,
-      complete: (results) => {
-        // Clear existing data first
-        routesMap.value.clear()
-        
-        // Populate routes map (route_id -> route info)
-        results.data.forEach(row => {
-          if (row.route_id) {
-            routesMap.value.set(row.route_id.trim(), {
-              id: row.route_id.trim(),
-              shortName: row.route_short_name?.trim() || '',
-              name: cleanRouteName(row.route_long_name || ''),
-              type: row.route_type,
-              color: row.route_color,
-              textColor: row.route_text_color
-            })
-          }
+    // Parse CSV synchronously - the result is the data array directly
+    const results = parse(csvData, { columns: true })
+    
+    // Clear existing data first
+    routesMap.value.clear()
+    
+    // Populate routes map (route_id -> route info)
+    results.forEach(row => {
+      if (row.route_id) {
+        routesMap.value.set(row.route_id.trim(), {
+          id: row.route_id.trim(),
+          shortName: row.route_short_name?.trim() || '',
+          name: cleanRouteName(row.route_long_name || ''),
+          type: row.route_type,
+          color: row.route_color,
+          textColor: row.route_text_color
         })
-        
-        console.log(`Loaded routes data: ${routesMap.value.size} entries`)
-      },
-      error: (error) => {
-        console.error('Error parsing routes data:', error)
       }
     })
+    
+    console.log(`Loaded routes data: ${routesMap.value.size} entries`)
+    return true
   } catch (error) {
     console.error('Error loading routes data:', error)
+    return false
   }
 }
 

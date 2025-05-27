@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Papa from 'papaparse'
+import { parse } from 'csv-parse/browser/esm/sync'
 import MetroLine from '@/components/MetroLine.vue'
 
 const route = useRoute()
@@ -46,68 +46,77 @@ const remainingTimes = ref({})
 let apiRefreshTimer = null
 let countdownTimer = null
 
-const claveTMB = '5c68a6b4727d9860c62abe6354495735'
-
 const loadInterchangeData = async () => {
   try {
     const response = await fetch('/data/info_stations.csv')
     const csvData = await response.text()
     
-    Papa.parse(csvData, {
-      header: true,
-      complete: (results) => {
-        results.data.forEach(station => {
-          if (station.NOM_METRO) {
-            // Parse metro lines correctly
-            const metroLines = station.LINIES_METRO ? 
-
-              station.LINIES_METRO.match(/L[0-9]+[NS]*/g) : [];
-              
-            
-            // Parse Renfe lines correctly  
-            const renfeLines = station.LINIES_RENFE ? 
-              station.LINIES_RENFE.match(/R[0-9]+|RG[0-9]+/g) : [];
-            
-            // Parse FGC lines correctly
-            const fgcLines = station.LINIES_FGC ? 
-              station.LINIES_FGC.match(/[SLR][0-9]+|RL[0-9]+/g) : [];
-            
-            // Parse Tram lines correctly
-            const tramLines = station.LINIES_TRAM ? 
-              station.LINIES_TRAM.match(/T[0-9]+/g) : [];
-            
-            interchangeData.value[station.NOM_METRO] = {
-              metro: metroLines || [],
-              renfe: renfeLines || [], 
-              fgc: fgcLines || [],
-              tram: tramLines || []
-            }
-          }
-        })
-        console.log('Loaded interchange data:', interchangeData.value)
+    // Parse CSV synchronously - the result is the data array directly
+    const results = parse(csvData, { columns: true })
+    
+    // Process each station record
+    results.forEach(station => {
+      if (station.NOM_METRO) {
+        // Parse metro lines correctly
+        const metroLines = station.LINIES_METRO ? 
+          station.LINIES_METRO.match(/L[0-9]+[NS]*/g) : [];
+          
+        // Parse Renfe lines correctly  
+        const renfeLines = station.LINIES_RENFE ? 
+          station.LINIES_RENFE.match(/R[0-9]+|RG[0-9]+/g) : [];
+        
+        // Parse FGC lines correctly
+        const fgcLines = station.LINIES_FGC ? 
+          station.LINIES_FGC.match(/[SLR][0-9]+|RL[0-9]+/g) : [];
+        
+        // Parse Tram lines correctly
+        const tramLines = station.LINIES_TRAM ? 
+          station.LINIES_TRAM.match(/T[0-9]+/g) : [];
+        
+        interchangeData.value[station.NOM_METRO] = {
+          metro: metroLines || [],
+          renfe: renfeLines || [], 
+          fgc: fgcLines || [],
+          tram: tramLines || []
+        }
       }
     })
+    
+    console.log('Loaded interchange data:', Object.keys(interchangeData.value).length, 'stations')
+    return true
   } catch (error) {
     console.error('Error loading interchange data:', error)
+    return false
   }
 }
 
-const loadLineStations = (line) => {
-  fetch('/data/metro/estacions_linia.csv')
-    .then(r => r.text())
-    .then(csv => {
-      Papa.parse(csv, {
-        header: true,
-        complete(res) {
-          stations.value = res.data
-            .filter(s => s.CODI_LINIA === line)
-            .map(s => ({
-              code: s.CODI_ESTACIO,
-              name: s.NOM_ESTACIO
-            }))
-        }
-      })
+const loadLineStations = async (line) => {
+  try {
+    console.log(`Loading stations for line: ${line}`)
+    const response = await fetch('/data/metro/estacions_linia.csv')
+    const csvData = await response.text()
+    
+    // Use synchronous parse function directly
+    const results = parse(csvData, { 
+      columns: true,
+      skip_empty_lines: true
     })
+    
+    // Filter and map the results
+    stations.value = results
+      .filter(s => s.CODI_LINIA === line)
+      .map(s => ({
+        code: s.CODI_ESTACIO,
+        name: s.NOM_ESTACIO
+      }))
+    
+    console.log(`Loaded ${stations.value.length} stations for line ${line}`)
+    return stations.value
+  } catch (error) {
+    console.error(`Error loading stations for line ${line}:`, error)
+    stations.value = []
+    return []
+  }
 }
 
 const loadStationData = async () => {
@@ -121,85 +130,84 @@ const loadStationData = async () => {
     const stationCsvData = await stationResponse.text()
     const lineStationCsvData = await lineStationResponse.text()
     
-    Papa.parse(stationCsvData, {
-      header: true,
-      complete: (results) => {
-        results.data.forEach(station => {
-          if (station.NOM_ESTACIO && station.PICTO) {
-            const isInterchange = station.PICTO && (
-              station.PICTO.length > 3
-            );
-            
-            stationDataMap.value[station.NOM_ESTACIO] = {
-              name: station.NOM_ESTACIO,
-              code: station.CODI_GRUP_ESTACIO,
-              picto: station.PICTO,
-              isInterchange: isInterchange
-            }
-          }
-        })
+    // Use synchronous parse instead of callback for browser/esm/sync version
+    const stationResults = parse(stationCsvData, { columns: true })
+    
+    // Process station data
+    stationResults.forEach(station => {
+      if (station.NOM_ESTACIO && station.PICTO) {
+        const isInterchange = station.PICTO && (station.PICTO.length > 3)
         
-        console.log('Loaded station data with interchanges:', stationDataMap.value)
+        stationDataMap.value[station.NOM_ESTACIO] = {
+          name: station.NOM_ESTACIO,
+          code: station.CODI_GRUP_ESTACIO,
+          picto: station.PICTO,
+          isInterchange: isInterchange
+        }
       }
     })
     
-    // Update the parsing of line-station data to track line associations
-    Papa.parse(lineStationCsvData, {
-      header: true,
-      complete: (results) => {
-        // Initialize line-station map
-        lineStationMap.value = {}
+    console.log('Loaded station data with interchanges:', Object.keys(stationDataMap.value).length)
+    
+    // Process line-station data
+    const lineStationResults = parse(lineStationCsvData, { columns: true })
+    
+    // Initialize line-station map
+    lineStationMap.value = {}
+    
+    lineStationResults.forEach(station => {
+      if (station.CODI_ESTACIO && station.CODI_LINIA) {
+        // Map station code to name
+        stationNameMap.value[station.CODI_ESTACIO] = station.NOM_ESTACIO
         
-        results.data.forEach(station => {
-          if (station.CODI_ESTACIO && station.CODI_LINIA) {
-            // Map station code to name
-            stationNameMap.value[station.CODI_ESTACIO] = station.NOM_ESTACIO
-            
-            // Group stations by line
-            if (!lineStationMap.value[station.CODI_LINIA]) {
-              lineStationMap.value[station.CODI_LINIA] = []
-            }
-            
-            // Only add if not already in array
-            if (!lineStationMap.value[station.CODI_LINIA].includes(station.NOM_ESTACIO)) {
-              lineStationMap.value[station.CODI_LINIA].push(station.NOM_ESTACIO)
-            }
-          }
-        })
+        // Group stations by line
+        if (!lineStationMap.value[station.CODI_LINIA]) {
+          lineStationMap.value[station.CODI_LINIA] = []
+        }
         
-        console.log('Loaded line-station mappings:', lineStationMap.value)
+        // Only add if not already in array
+        if (!lineStationMap.value[station.CODI_LINIA].includes(station.NOM_ESTACIO)) {
+          lineStationMap.value[station.CODI_LINIA].push(station.NOM_ESTACIO)
+        }
       }
     })
+    
+    console.log('Loaded line-station mappings:', Object.keys(lineStationMap.value).length, 'lines')
+    console.log('Station codes loaded:', Object.keys(stationNameMap.value).length)
+    
+    return true
   } catch (error) {
     console.error('Error loading station data:', error)
+    return false
   }
 }
 
-const loadLineMetadata = () => {
-  fetch('/data/metro/linies_metro.csv')
-    .then(r => r.text())
-    .then(csv => {
-      Papa.parse(csv, {
-        header: true,
-        complete(res) {
-          // Create a map of line code to its origin/destination
-          res.data.forEach(line => {
-            if (line.CODI_LINIA && line.ORIGEN_LINIA && line.DESTI_LINIA) {
-              lineMetadata.value[line.CODI_LINIA] = {
-                name: line.NOM_LINIA,
-                first: line.ORIGEN_LINIA,
-                last: line.DESTI_LINIA,
-                color: line.COLOR_LINIA
-              }
-            }
-          })
-          console.log('Loaded line metadata:', lineMetadata.value)
+const loadLineMetadata = async () => {
+  try {
+    const response = await fetch('/data/metro/linies_metro.csv')
+    const csvData = await response.text()
+    
+    // Use synchronous parse instead of callback style
+    const results = parse(csvData, { columns: true })
+    
+    // Create a map of line code to its origin/destination
+    results.forEach(line => {
+      if (line.CODI_LINIA && line.ORIGEN_LINIA && line.DESTI_LINIA) {
+        lineMetadata.value[line.CODI_LINIA] = {
+          name: line.NOM_LINIA,
+          first: line.ORIGEN_LINIA,
+          last: line.DESTI_LINIA,
+          color: line.COLOR_LINIA
         }
-      })
+      }
     })
-    .catch(error => {
-      console.error('Error loading line metadata:', error)
-    })
+    
+    console.log('Loaded line metadata:', Object.keys(lineMetadata.value).length, 'lines')
+    return true
+  } catch (error) {
+    console.error('Error loading line metadata:', error)
+    return false
+  }
 }
 
 const fetchTMB = async () => {
@@ -427,14 +435,23 @@ const handleStationSelected = (stationName) => {
 }
 
 const updateCountdown = () => {
+  // Update global countdown values for reference
   if (countdown.value > 0) {
     countdown.value--
   } else if (countdown.value <= 0) {
     countdown.value = "0"
   }
+  
   if (secondCountdown.value > 0) {
     secondCountdown.value--
   }
+  
+  // Also decrement all train countdown times
+  Object.keys(remainingTimes.value).forEach(serviceId => {
+    if (remainingTimes.value[serviceId] > 0) {
+      remainingTimes.value[serviceId]--
+    }
+  })
 }
 
 const formatTime = (seconds) => {
@@ -536,16 +553,33 @@ const lineEndpoints = computed(() => {
 })
 
 const switchToLine = (targetLine) => {
-
-
   // Extract the line number from the format (e.g., "L3" -> "3")
   const newLine = targetLine.replace('L', '');
   
   // Get the current station name
   const currentStation = getStationName.value;
   
-  if (!currentStation) return;
+  if (!currentStation) {
+    console.warn("No current station available");
+    return;
+  }
   
+  console.log(`Switching from station "${currentStation}" to line ${newLine}`);
+  
+  // Check if station data is loaded
+  if (Object.keys(stationNameMap.value).length === 0) {
+    console.warn("Station data is not loaded yet. Loading data first...");
+    loadStationData().then(() => {
+      // Try again after loading data
+      findAndNavigateToStation(currentStation, newLine);
+    });
+    return;
+  }
+  
+  findAndNavigateToStation(currentStation, newLine);
+};
+
+const findAndNavigateToStation = (currentStation, newLine) => {
   // Find the station code for this station name on the target line
   const stationOnTargetLine = findStationCodeByNameAndLine(currentStation, newLine);
   
@@ -558,14 +592,21 @@ const switchToLine = (targetLine) => {
       }
     });
   } else {
-    console.warn(`Station ${currentStation} does not exist on line ${newLine}`);
-    // Optionally show a notification to the user
+    console.warn(`Station "${currentStation}" does not exist on line ${newLine}`);
+    // Navigate to just the line without a specific station
+    router.replace({
+      query: {
+        l: newLine
+      }
+    });
   }
 };
 
 const findStationCodeByNameAndLine = (stationName, targetLine) => {
   const allStations = stations.value;
-
+  console.log(`Looking for station "${stationName}" on line L${targetLine}`);
+  console.log(`Available station data:`, Object.keys(stationNameMap.value).length, 'station codes');
+  
   // Define getLinePrefix first before using it
   const getLinePrefix = (line) => {
     const prefixes = {
@@ -590,18 +631,37 @@ const findStationCodeByNameAndLine = (stationName, targetLine) => {
   // Now use getLinePrefix after it's defined
   // Buscar primero entre las estaciones ya cargadas
   if (allStations?.length > 0) {
-    const match = allStations.find(s => s.name === stationName && s.code.startsWith(getLinePrefix(targetLine)));
+    const match = allStations.find(s => 
+      s.name.toLowerCase() === stationName.toLowerCase() && 
+      s.code.startsWith(getLinePrefix(targetLine)));
     if (match) return match.code;
   }
 
   const linePrefix = getLinePrefix(targetLine);
   let matchingCode = null;
 
+  // Case-insensitive comparison and debugging
+  console.log(`Searching with prefix "${linePrefix}" for station "${stationName}"`);
   Object.entries(stationNameMap.value).forEach(([code, name]) => {
-    if (name === stationName && code.startsWith(linePrefix)) {
+    if (name && name.toLowerCase() === stationName.toLowerCase() && code.startsWith(linePrefix)) {
       matchingCode = code;
+      console.log(`Found match: ${code} -> ${name}`);
     }
   });
+
+  // Try a more permissive search if exact match not found
+  if (!matchingCode) {
+    // Try to match by checking if the station name contains our search term
+    Object.entries(stationNameMap.value).forEach(([code, name]) => {
+      if (name && 
+          code.startsWith(linePrefix) && 
+          (name.toLowerCase().includes(stationName.toLowerCase()) || 
+           stationName.toLowerCase().includes(name.toLowerCase()))) {
+        console.log(`Found partial match: ${code} -> ${name} for "${stationName}"`);
+        if (!matchingCode) matchingCode = code;
+      }
+    });
+  }
 
   if (matchingCode) {
     console.log(`Found station code ${matchingCode} for station ${stationName} on line L${targetLine}`);
@@ -611,18 +671,6 @@ const findStationCodeByNameAndLine = (stationName, targetLine) => {
   console.warn(`Could not find station code for ${stationName} on line L${targetLine}`);
   return null;
 };
-
-let countdownInterval = null
-onMounted(() => {
-  countdownInterval = setInterval(() => {
-    Object.keys(remainingTimes.value).forEach(id => {
-      const v = remainingTimes.value[id]
-      if (typeof v === 'number' && v > 0) {
-        remainingTimes.value[id]--
-      }
-    })
-  }, 1000)
-})
 
 
 // Default stations if we can't get real data
@@ -751,7 +799,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  clearInterval(countdownInterval)
+  if (apiRefreshTimer) clearInterval(apiRefreshTimer)
+  if (countdownTimer) clearInterval(countdownTimer)
 })
 
 

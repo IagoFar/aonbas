@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import Papa from 'papaparse'
+import { parse } from 'csv-parse/browser/esm/sync'
 
 const props = defineProps({
   stations: {
@@ -142,57 +142,38 @@ const lineColorValue = computed(() => {
 // Function to load all stations for the selected line
 const loadLineStations = async (line) => {
   try {
+    console.log(`Loading stations for line: ${line}`)
     const response = await fetch('/data/metro/estacions_linia.csv')
     const csvData = await response.text()
-    
-    return new Promise((resolve) => {
-      Papa.parse(csvData, {
-        header: true,
-        complete: (results) => {
-          // Filter stations for the current line
-          const stations = results.data
-            .filter(s => s.CODI_LINIA === line.toString())
-            .map(s => ({
-              code: s.CODI_ESTACIO,
-              name: s.NOM_ESTACIO,
-              order: s.ORDRE_ESTACIO ? parseInt(s.ORDRE_ESTACIO) : null,
-              picto: s.PICTO || s.PICTO_GRUP,
-              correspondence: false // Will update this later
-            }))
-            .sort((a, b) => {
-              // Sort by order if available, otherwise by code
-              if (a.order !== null && b.order !== null) {
-                return a.order - b.order
-              }
-              
-              // Extract numeric part of code for sorting
-              const codeA = parseInt(a.code.toString().replace(/^\D+/g, ''))
-              const codeB = parseInt(b.code.toString().replace(/^\D+/g, ''))
-              return codeA - codeB
-            })
-          
-          // Build line-station mappings
-          if (!lineStationMap.value[line]) {
-            lineStationMap.value[line] = []
-          }
-          
-          stations.forEach(station => {
-            // Map station code to name for future lookups
-            stationNameMap.value[station.code] = station.name
-            
-            // Only add to line-station map if not already there
-            if (!lineStationMap.value[line].includes(station.name)) {
-              lineStationMap.value[line].push(station.name)
-            }
-          })
-          
-          // Return the stations for further processing
-          resolve(stations)
-        }
-      })
+    console.log(`CSV data loaded, length: ${csvData.length}`)
+
+    const records = parse(csvData, {
+      columns: true,
+      skip_empty_lines: true
     })
-  } catch (error) {
-    console.error('Error loading line stations:', error)
+    console.log(`Parsed ${records.length} records`)
+
+    const filtered = records.filter(s => s.CODI_LINIA === line.toString())
+    console.log(`Filtered ${filtered.length} stations for line ${line}`)
+
+    const stations = filtered.map(s => ({
+      code: s.CODI_ESTACIO,
+      name: s.NOM_ESTACIO,
+      order: s.ORDRE_ESTACIO ? parseInt(s.ORDRE_ESTACIO) : null,
+      picto: s.PICTO || s.PICTO_GRUP,
+      correspondence: false
+    }))
+    .sort((a, b) => {
+      if (a.order !== null && b.order !== null) return a.order - b.order
+      const codeA = parseInt(a.code.toString().replace(/^\D+/g, ''))
+      const codeB = parseInt(b.code.toString().replace(/^\D+/g, ''))
+      return codeA - codeB
+    })
+
+    console.log(`Returning ${stations.length} formatted stations`)
+    return stations
+  } catch (err) {
+    console.error('Error parsing CSV:', err)
     return []
   }
 }
@@ -203,30 +184,31 @@ const loadStationData = async () => {
     const response = await fetch('/data/metro/estacions.csv')
     const csvData = await response.text()
     
-    return new Promise((resolve) => {
-      Papa.parse(csvData, {
-        header: true,
-        complete: (results) => {
-          results.data.forEach(station => {
-            if (station.NOM_ESTACIO) {
-              const isInterchange = station.PICTO && station.PICTO.length > 3 && 
-                                    (station.PICTO.match(/L/g) || []).length > 1
-              
-              stationDataMap.value[station.NOM_ESTACIO] = {
-                name: station.NOM_ESTACIO,
-                code: station.CODI_GRUP_ESTACIO,
-                picto: station.PICTO,
-                isInterchange: isInterchange
-              }
-            }
-          })
-          
-          resolve()
-        }
-      })
+    // Use parse directly with sync version
+    const results = parse(csvData, {
+      columns: true,
+      skip_empty_lines: true
     })
+    
+    results.forEach(station => {
+      if (station.NOM_ESTACIO) {
+        const isInterchange = station.PICTO && station.PICTO.length > 3 && 
+                              (station.PICTO.match(/L/g) || []).length > 1
+        
+        stationDataMap.value[station.NOM_ESTACIO] = {
+          name: station.NOM_ESTACIO,
+          code: station.CODI_GRUP_ESTACIO,
+          picto: station.PICTO,
+          isInterchange: isInterchange
+        }
+      }
+    })
+    
+    console.log('Loaded station data:', Object.keys(stationDataMap.value).length, 'stations')
+    return true
   } catch (error) {
     console.error('Error loading station data:', error)
+    return false
   }
 }
 
@@ -303,7 +285,8 @@ const checkInterchange = (station) => {
 }
 
 // Watch for line changes to reload the stations
-watch(() => props.line, () => {
+watch(() => props.line, (newLine) => {
+  console.log('Line changed to:', newLine)
   updateLineStations()
 })
 
