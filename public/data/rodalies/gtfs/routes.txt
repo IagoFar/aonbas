@@ -1,0 +1,123 @@
+route_id,route_short_name,route_long_name,route_type,route_color,route_text_color                                                                     
+51T0001R1  ,R1  ,Molins de Rei                           -Maçanet-Massanes                        ,2,7EBCED,FFFFFF                                    
+51T0002R1  ,R1  ,Maçanet-Massanes                        -Molins de Rei                           ,2,7EBCED,FFFFFF                                    
+51T0003R2N ,R2N ,Aeroport                                -Maçanet-Massanes                        ,2,D0DF00,FFFFFF                                    
+51T0004R2N ,R2N ,Maçanet-Massanes                        -Aeroport                                ,2,D0DF00,FFFFFF                                    
+51T0005R4  ,R4  ,Sant Vicenc de Calders                  -Manresa                                 ,2,F7A30D,FFFFFF                                    
+51T0006R4  ,R4  ,Manresa                                 -Sant Vicenc de Calders                  ,2,F7A30D,FFFFFF                                    
+51T0007R2S ,R2S ,Sant Vicenc de Calders                  -Barcelona-Estació de França             ,2,146520,FFFFFF                                    
+51T0008R2S ,R2S ,Barcelona-Estació de França             -Sant Vicenc de Calders                  ,2,146520,FFFFFF                                    
+51T0009R2S ,R2S ,Sant Vicenc de Calders                  -Barcelona-Estació de França             ,2,146520,FFFFFF                                    
+51T0010R2S ,R2S ,Barcelona-Estació de França             -Sant Vicenc de Calders                  ,2,146520,FFFFFF                                    
+51T0011R2S ,R2S ,Sant Vicenc de Calders                  -Barcelona-Estació de França             ,2,146520,FFFFFF                                    
+51T0012R2S ,R2S ,Barcelona-Estació de França             -Sant Vicenc de Calders                  ,2,146520,FFFFFF                                    
+51T0013R2  ,R2  ,Sant Vicenc de Calders                  -Maçanet-Massanes                        ,2,24A842,FFFFFF                                    
+51T0014R2  ,R2  ,Maçanet-Massanes                        -Sant Vicenc de Calders                  ,2,24A842,FFFFFF                                    
+51T0015R3  ,R3  ,L'Hospitalet de Llobregat               -Puigcerdà                               ,2,EB4128,FFFFFF                                    
+51T0016R3  ,R3  ,Puigcerdà                               -L'Hospitalet de Llobregat               ,2,EB4128,FFFFFF                                    
+51T0017R3a ,R3a ,Vic                                     -La Tor de Querol-Enveig                 ,2,EB4128,FFFFFF                                    
+51T0018R3a ,R3a ,La Tor de Querol-Enveig                 -Vic                                     ,2,EB4128,FFFFFF                                    
+51T0019R4  ,R4  ,Sant Vicenc de Calders                  -Manresa                                 ,2,F7A30D,FFFFFF                                    
+51T0020R4  ,R4  ,Manresa                                 -Sant Vicenc de Calders                  ,2,F7A30D,FFFFFF                                    
+51T0021R7  ,R7  ,Martorell Central                       -L'Hospitalet de Llobregat               ,2,B57CBB,FFFFFF                                    
+51T0022R7  ,R7  ,L'Hospitalet de Llobregat               -Martorell Central                       ,2,B57CBB,FFFFFF                                    
+51T0023R8  ,R8  ,Martorell Central                       -Granollers Centre                       ,2,88016A,FFFFFF                                    
+51T0024R8  ,R8  ,Granollers Centre                       -Martorell Central                       ,2,88016A,FFFFFF                                    
+51T0025R2  ,R2  ,Sant Vicenc de Calders                  -Castelldefels                           ,2,24A842,FFFFFF                                    
+51T0026R2  ,R2  ,Castelldefels                           -Sant Vicenc de Calders                  ,2,24A842,FFFFFF                                    
+51T0027R2  ,R2  ,Sant Celoni                             -Barcelona-Sants                         ,2,24A842,FFFFFF                                    
+51T0028R2  ,R2  ,Barcelona-Sants                         -Sant Celoni                             ,2,24A842,FFFFFF                                    
+51T0029R7  ,R7  ,Barcelona-Fabra i Puig                  -Cerdanyola-Universitat                  ,2,24A842,FFFFFF                                    
+51T0030R7  ,R7  ,Cerdanyola-Universitat                  -Barcelona-Fabra i Puig                  ,2,24A842,FFFFFF                                    
+51T0031R4  ,R4  ,Terrassa Estació del Nord               -Castellbisbal                           ,2,F7A30D,FFFFFF                                    
+51T0032R4  ,R4  ,Castellbisbal                           -Terrassa Estació del Nord               ,2,F7A30D,FFFFFF                                    
+51T0033R3  ,R3  ,Figaró                                  -La Tor de Querol-Enveig                 ,2,24A842,FFFFFF                                    
+51T0034R3  ,R3  ,La Tor de Querol-Enveig                 -Figaró                                  ,2,24A842,FFFFFF                                    
+51T0035R8  ,R8  ,Castellbisbal                           -Cerdanyola-Universitat                  ,2,88016A,FFFFFF                                    
+51T0036R8  ,R8  ,Cerdanyola-Universitat                  -Castellbisbal                           ,2,88016A,FFFFFF                                    
+51T0037R7  ,R7  ,Molins de Rei                           -Montcada Bifurcació                     ,2,B57CBB,FFFFFF                                    
+51T0038R7  ,R7  ,Montcada Bifurcació                     -Molins de Rei                           ,2,B57CBB,FFFFFF                                    
+51T0039R3  ,R3  ,Vic                                     -Montcada Ripollet                       ,2,24A842,FFFFFF                                    
+51T0040R3  ,R3  ,Montcada Ripollet                       -Vic                                     ,2,24A842,FFFFFF                                    
+51T0041R4  ,R4  ,Molins de Rei                           -Montcada Bifurcació                     ,2,F7A30D,FFFFFF                                    
+51T0042R4  ,R4  ,Montcada Bifurcació                     -Molins de Rei                           ,2,F7A30D,FFFFFF                                    
+51T0043R1  ,R1  ,Canet de Mar                            -Blanes                                  ,2,7EBCED,FFFFFF                                    
+51T0044R1  ,R1  ,Blanes                                  -Canet de Mar                            ,2,7EBCED,FFFFFF                                    
+51T0045R3  ,R3  ,La Molina                               -Ribes de Freser                         ,2,EB4128,FFFFFF                                    
+51T0046R3  ,R3  ,Ribes de Freser                         -La Molina                               ,2,EB4128,FFFFFF                                    
+51T0047RL4 ,RL4 ,Terrassa Estació del Nord               -Lleida                                  ,2,F7A30D,FFFFFF                                    
+51T0048RL4 ,RL4 ,Lleida                                  -Terrassa Estació del Nord               ,2,F7A30D,FFFFFF                                    
+51T0049R1  ,R1  ,Mataró                                  -Badalona                                ,2,7EBCED,FFFFFF                                    
+51T0050R1  ,R1  ,Badalona                                -Mataró                                  ,2,7EBCED,FFFFFF                                    
+51T0051R2  ,R2  ,                                        -                                        ,2,D0DF00,FFFFFF                                    
+51T0052R2  ,R2  ,                                        -                                        ,2,D0DF00,FFFFFF                                    
+51T0053R2  ,R2  ,                                        -                                        ,2,D0DF00,FFFFFF                                    
+51T0054R2  ,R2  ,                                        -                                        ,2,D0DF00,FFFFFF                                    
+51T0055R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0056R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0057R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0058R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0059R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0060R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0061R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0062R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0063R1  ,R1  ,                                        -                                        ,2,7EBCED,FFFFFF                                    
+51T0064R1  ,R1  ,                                        -                                        ,2,7EBCED,FFFFFF                                    
+51T0065R1  ,R1  ,                                        -                                        ,2,7EBCED,FFFFFF                                    
+51T0066R1  ,R1  ,                                        -                                        ,2,7EBCED,FFFFFF                                    
+51T0067R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0068R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0069R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0070R2  ,R2  ,                                        -                                        ,2,24A842,FFFFFF                                    
+51T0071R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0072R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0073R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0074R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0075R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0076R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0077R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0078R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0079R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0080R4  ,R4  ,                                        -                                        ,2,F7A30D,FFFFFF                                    
+51T0081R7  ,R7  ,                                        -                                        ,2,B57CBB,FFFFFF                                    
+51T0082R7  ,R7  ,                                        -                                        ,2,B57CBB,FFFFFF                                    
+51T0083R7  ,R7  ,                                        -                                        ,2,B57CBB,FFFFFF                                    
+51T0084R7  ,R7  ,                                        -                                        ,2,B57CBB,FFFFFF                                    
+51T0085R3  ,R3  ,                                        -                                        ,2,EB4128,FFFFFF                                    
+51T0086R3  ,R3  ,                                        -                                        ,2,EB4128,FFFFFF                                    
+51T0087R3  ,R3  ,                                        -                                        ,2,EB4128,FFFFFF                                    
+51T0088R3  ,R3  ,                                        -                                        ,2,EB4128,FFFFFF                                    
+51T0089R8  ,R8  ,                                        -                                        ,2,88016A,FFFFFF                                    
+51T0090R8  ,R8  ,                                        -                                        ,2,88016A,FFFFFF                                    
+51T0091R8  ,R8  ,                                        -                                        ,2,88016A,FFFFFF                                    
+51T0092R8  ,R8  ,                                        -                                        ,2,88016A,FFFFFF                                    
+51T0093R11 ,R11 ,Figueres                                -Barcelona-Sants                         ,2,88016A,FFFFFF                                    
+51T0094R11 ,R11 ,Barcelona-Sants                         -Figueres                                ,2,88016A,FFFFFF                                    
+51T0095R2  ,R2  ,El Prat de Llobregat                    -Barcelona-Sant Andreu                   ,2,24A842,FFFFFF                                    
+51T0096R2  ,R2  ,Barcelona-Sant Andreu                   -El Prat de Llobregat                    ,2,24A842,FFFFFF                                    
+51T0097R15 ,R15 ,Riba-roja d'Ebre                        -Caspe                                   ,2,D0C1C1,FFFFFF                                    
+51T0098R15 ,R15 ,Caspe                                   -Riba-roja d'Ebre                        ,2,D0C1C1,FFFFFF                                    
+51T0099RL3 ,RL3 ,Lleida                                  -Cervera                                 ,2,B6AE33,FFFFFF                                    
+51T0100RL3 ,RL3 ,Cervera                                 -Lleida                                  ,2,B6AE33,FFFFFF                                    
+51T0101R14 ,R14 ,La Plana-Picamoixons                    -Tarragona                               ,2,805CC8,FFFFFF                                    
+51T0102R14 ,R14 ,Tarragona                               -La Plana-Picamoixons                    ,2,805CC8,FFFFFF                                    
+51T0103R16 ,R16 ,Tortosa                                 -Barcelona-Estació de França             ,2,DF2049,FFFFFF                                    
+51T0104R16 ,R16 ,Barcelona-Estació de França             -Tortosa                                 ,2,DF2049,FFFFFF                                    
+51T0105R16 ,R16 ,Ulldecona-Alcanar-La Sénia              -                                        ,2,DF2049,FFFFFF                                    
+51T0106R16 ,R16 ,                                        -Ulldecona-Alcanar-La Sénia              ,2,DF2049,FFFFFF                                    
+51T0107R17 ,R17 ,Salou-Port Aventura                     -Barcelona-Estació de França             ,2,F3B12E,FFFFFF                                    
+51T0108R17 ,R17 ,Barcelona-Estació de França             -Salou-Port Aventura                     ,2,F3B12E,FFFFFF                                    
+51T0109RT2 ,RT2 ,Salou-Port Aventura                     -Tarragona                               ,2,F965DE,FFFFFF                                    
+51T0110RT2 ,RT2 ,Tarragona                               -Salou-Port Aventura                     ,2,F965DE,FFFFFF                                    
+51T0111RG1 ,RG1 ,Maçanet-Massanes                        -Figueres                                ,2,409EF5,FFFFFF                                    
+51T0112RG1 ,RG1 ,Figueres                                -Maçanet-Massanes                        ,2,409EF5,FFFFFF                                    
+51T0113R15 ,R15 ,Cunit                                   -Riba-roja d'Ebre                        ,2,D0C1C1,FFFFFF                                    
+51T0114R15 ,R15 ,Riba-roja d'Ebre                        -Cunit                                   ,2,D0C1C1,FFFFFF                                    
+51T0115R14 ,R14 ,Lleida                                  -Cunit                                   ,2,805CC8,FFFFFF                                    
+51T0116R14 ,R14 ,Cunit                                   -Lleida                                  ,2,805CC8,FFFFFF                                    
+51T0117R4  ,R4  ,Sabadell Sud                            -El Vendrell                             ,2,F7A30D,FFFFFF                                    
+51T0118R4  ,R4  ,El Vendrell                             -Sabadell Sud                            ,2,F7A30D,FFFFFF                                    
+51T0119R11 ,R11 ,Barcelona-Sant Andreu                   -Girona                                  ,2,88016A,FFFFFF                                    
+51T0120R11 ,R11 ,Girona                                  -Barcelona-Sant Andreu                   ,2,88016A,FFFFFF                                    
+51T0121R16 ,R16 ,                                        -Ulldecona-Alcanar-La Sénia              ,2,DF2049,FFFFFF                                    
+51T0122R16 ,R16 ,Ulldecona-Alcanar-La Sénia              -                                        ,2,DF2049,FFFFFF                                    

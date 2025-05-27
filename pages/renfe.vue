@@ -1,14 +1,14 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Papa from 'papaparse'
+import { parse } from 'csv-parse/browser/esm/sync'
 
 const route = useRoute()
 const router = useRouter()
 
 // Route parameters
 const stopId = route.query.s
-const selectedLine = route.query.l
+const selectedLine = route.query.line
 
 // State management
 const data = ref(null)
@@ -36,8 +36,8 @@ const loadStationData = async () => {
     const response = await fetch('/data/rodalies/stops.csv')
     const csvData = await response.text()
     
-    Papa.parse(csvData, {
-      header: true,
+    parse(csvData, {
+      columns: true,
       complete: (results) => {
         // Initialize the stationsByLine map
         lines.forEach(line => {
@@ -86,113 +86,6 @@ const loadStationData = async () => {
   }
 }
 
-const loadGTFSData = async () => {
-  try {
-    console.log('Starting GTFS data loading process...')
-    
-    // Load trips.txt and routes.txt files
-    const [tripsResponse, routesResponse] = await Promise.all([
-      fetch('/data/rodalies/gtfs/trips.txt').catch(err => {
-        console.error('Failed to fetch trips.txt:', err)
-        return { text: () => Promise.resolve('') }
-      }),
-      fetch('/data/rodalies/gtfs/routes.txt').catch(err => {
-        console.error('Failed to fetch routes.txt:', err)
-        return { text: () => Promise.resolve('') }
-      })
-    ])
-    
-    const tripsCsvData = await tripsResponse.text()
-    const routesCsvData = await routesResponse.text()
-    
-    if (!tripsCsvData) {
-      console.error('trips.txt data is empty')
-      return
-    }
-    
-    if (!routesCsvData) {
-      console.error('routes.txt data is empty')
-      return
-    }
-    
-    console.log('GTFS files fetched successfully')
-    
-    // Parse trips.txt to map trip_id to route_id
-    Papa.parse(tripsCsvData, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if (results.errors && results.errors.length > 0) {
-          console.error('Error parsing trips.txt:', results.errors)
-        }
-        
-        let tripsMapCount = 0
-        results.data.forEach(trip => {
-          if (trip.trip_id && trip.route_id) {
-            // Store the direct mapping
-            tripsMap.value.set(trip.trip_id, trip.route_id)
-            tripsMapCount++
-            
-            // Store normalized version (lowercase)
-            const normalizedTripId = trip.trip_id.trim().toLowerCase()
-            tripsMap.value.set(normalizedTripId, trip.route_id)
-            
-            // Store just the route ID prefix part (e.g., "5101S77564" from "5101S77564R4")
-            const baseId = trip.trip_id.replace(/R\d+$/, '')
-            if (baseId !== trip.trip_id) {
-              tripsMap.value.set(baseId, trip.route_id)
-            }
-          }
-        })
-        console.log(`Loaded ${tripsMapCount} trips from GTFS data`)
-      }
-    })
-    
-    // Parse routes.txt with more robust error handling
-    Papa.parse(routesCsvData, {
-      header: true,
-      skipEmptyLines: true,
-      error: (error) => {
-        console.error('CSV parsing error:', error)
-      },
-      complete: (results) => {
-        if (results.errors && results.errors.length > 0) {
-          console.error('Error parsing routes.txt:', results.errors)
-        }
-        
-        results.data.forEach(route => {
-          if (route.route_id) {
-            // Extract route information, handling missing fields
-            routesMap.value.set(
-              route.route_id, 
-              {
-                name: cleanRouteName(route.route_long_name || ''),
-                shortName: route.route_short_name || '',
-                color: route.route_color || ''
-              }
-            )
-            
-            // Also map by route_short_name if available
-            if (route.route_short_name) {
-              routesMap.value.set(
-                route.route_short_name.trim(),
-                {
-                  name: cleanRouteName(route.route_long_name || ''),
-                  shortName: route.route_short_name || '',
-                  color: route.route_color || ''
-                }
-              )
-            }
-          }
-        })
-        console.log(`Loaded ${routesMap.value.size} routes from GTFS data`)
-      }
-    })
-  } catch (error) {
-    console.error('Error loading GTFS data:', error)
-  }
-}
-
 function cleanRouteName(name) {
   return name.trim()
     .replace(/\s+/g, ' ')  // Replace multiple spaces with a single space
@@ -206,8 +99,8 @@ const loadInterchangeData = async () => {
     const response = await fetch('/data/info_stations.csv')
     const csvData = await response.text()
     
-    Papa.parse(csvData, {
-      header: true,
+    parse(csvData, {
+      columns: true,
       complete: (results) => {
         results.data.forEach(station => {
           if (station.NOM_RENFE) {
@@ -240,6 +133,73 @@ const loadInterchangeData = async () => {
     })
   } catch (error) {
     console.error('Error loading interchange data:', error)
+  }
+}
+
+// Load trips data from GTFS
+const loadTripsData = async () => {
+  try {
+    const response = await fetch('/data/rodalies/gtfs/trips.txt')
+    const csvData = await response.text()
+    
+    parse(csvData, {
+      columns: true,
+      complete: (results) => {
+        // Clear existing data first
+        tripsMap.value.clear()
+        
+        // Populate trips map (trip_id -> route_id)
+        results.data.forEach(row => {
+          if (row.trip_id && row.route_id) {
+            tripsMap.value.set(row.trip_id, row.route_id.trim())
+          }
+        })
+        
+        console.log(`Loaded trips data: ${tripsMap.value.size} entries`)
+      },
+      error: (error) => {
+        console.error('Error parsing trips data:', error)
+      }
+    })
+  } catch (error) {
+    console.error('Error loading trips data:', error)
+  }
+}
+
+// Load routes data from GTFS
+const loadRoutesData = async () => {
+  try {
+    const response = await fetch('/data/rodalies/gtfs/routes.txt')
+    const csvData = await response.text()
+    
+    parse(csvData, {
+      columns: true,
+      complete: (results) => {
+        // Clear existing data first
+        routesMap.value.clear()
+        
+        // Populate routes map (route_id -> route info)
+        results.data.forEach(row => {
+          if (row.route_id) {
+            routesMap.value.set(row.route_id.trim(), {
+              id: row.route_id.trim(),
+              shortName: row.route_short_name?.trim() || '',
+              name: cleanRouteName(row.route_long_name || ''),
+              type: row.route_type,
+              color: row.route_color,
+              textColor: row.route_text_color
+            })
+          }
+        })
+        
+        console.log(`Loaded routes data: ${routesMap.value.size} entries`)
+      },
+      error: (error) => {
+        console.error('Error parsing routes data:', error)
+      }
+    })
+  } catch (error) {
+    console.error('Error loading routes data:', error)
   }
 }
 
@@ -422,85 +382,72 @@ const formatArrivalTime = (timeStr) => {
   return timeStr;
 };
 
-// Update the getDestinationFromTripId function with better trip ID matching
 const getDestinationFromTripId = (tripId) => {
   if (!tripId) return 'Desconegut'
   
   console.log(`Looking up destination for trip ID: "${tripId}"`)
   
-  // Extract line code for fallback options
-  const line = getLineFromTripId(tripId)
+  // Step 1: From the trip ID, get the route id as it is
+  const routeId = tripsMap.value.get(tripId)
+  console.log(`Route ID for trip ${tripId}: ${routeId || 'no match'}`)
   
-  // Strategy 1: Exact match
-  let routeId = tripsMap.value.get(tripId)
-  
-  // Strategy 2: Try normalized version (lowercase)
   if (!routeId) {
-    const normalizedTripId = tripId.trim().toLowerCase()
-    routeId = tripsMap.value.get(normalizedTripId)
-  }
-  
-  // Strategy 3: Try line code as route ID
-  if (!routeId && line !== 'R?') {
-    if (routesMap.value.has(line)) {
-      routeId = line
+    // If no route ID found, fall back to line-based destination
+    const line = getLineFromTripId(tripId)
+    console.log(`No route found, falling back to line: ${line}`)
+    
+    // Use line-specific destinations as fallback
+    const destinations = {
+      'R1': 'Maçanet-Massanes / Molins de Rei',
+      'R2': 'Sant Celoni / Aeroport',
+      'R2Nord': 'Maçanet-Massanes / Sant Celoni',
+      'R2Sud': 'Vilanova / Aeroport',
+      'R3': 'Puigcerdà / L\'Hospitalet',
+      'R4': 'Manresa / Sant Vicenç',
+      'R7': 'Cerdanyola Universitat / Barcelona',
+      'R8': 'Martorell / Granollers Centre',
+      'R11': 'Portbou / Barcelona',
+      'R12': 'Lleida / L\'Hospitalet',
+      'R13': 'Cerbère / Barcelona',
+      'R14': 'Lleida / Barcelona',
+      'R15': 'Riba-roja d\'Ebre / Barcelona',
+      'R16': 'Tortosa / Barcelona',
+      'R17': 'Portbou / Barcelona'
     }
+    
+    return destinations[line] || 'Desconegut'
   }
   
-  // Strategy 4: Try without line suffix
-  if (!routeId) {
-    const baseId = tripId.replace(/R\d+$/, '')
-    if (baseId !== tripId) {
-      routeId = tripsMap.value.get(baseId)
-    }
+  // Step 2: From the route ID, get the long route name
+  const routeInfo = routesMap.value.get(routeId)
+  console.log(`Route info for ${routeId}:`, routeInfo)
+  
+  if (!routeInfo || !routeInfo.name) {
+    return 'Desconegut'
   }
   
-  // Strategy 5: Try matching by prefix
-  if (!routeId) {
-    // Get the first part of the ID (before any underscore)
-    const prefix = tripId.split('_')[0]
-    // Look for any trip ID that starts with this prefix
-    if (prefix && prefix.length > 4) {
-      for (const [key, value] of tripsMap.value.entries()) {
-        if (key.startsWith(prefix)) {
-          routeId = value
-          console.log(`Found match by prefix ${prefix} -> ${routeId}`)
-          break
-        }
-      }
-    }
+  // Step 3: Get the destination from the route name
+  const routeName = routeInfo.name.trim()
+  
+  // First try to split by " - " (dash with spaces)
+  const parts = routeName.split(/ - /)
+  
+  if (parts.length >= 2) {
+    // The destination is the last part
+    return parts[parts.length - 1].trim()
   }
   
-  // If route ID found, get destination from routes map
-  if (routeId && routesMap.value.has(routeId)) {
-    const route = routesMap.value.get(routeId)
-    if (route && route.name) {
-      return route.name
-    }
+  // If that didn't work, try an alternative approach
+  // Looking for the pattern where there's a space, dash, space between city names
+  const regex = /^(.+?)\s+-\s+(.+?)$/
+  const match = routeName.match(regex)
+  
+  if (match && match.length >= 3) {
+    return match[2].trim()
   }
   
-  console.log(`No GTFS match found for ${tripId}, using line fallback`)
-  
-  // Fall back to line-specific destinations
-  const destinations = {
-    'R1': 'Maçanet-Massanes / Molins de Rei',
-    'R2': 'Sant Celoni / Aeroport',
-    'R2Nord': 'Maçanet-Massanes / Sant Celoni',
-    'R2Sud': 'Vilanova / Aeroport',
-    'R3': 'Puigcerdà / L\'Hospitalet',
-    'R4': 'Manresa / Sant Vicenç',
-    'R7': 'Cerdanyola Universitat / Barcelona',
-    'R8': 'Martorell / Granollers Centre',
-    'R11': 'Portbou / Barcelona',
-    'R12': 'Lleida / L\'Hospitalet',
-    'R13': 'Cerbère / Barcelona',
-    'R14': 'Lleida / Barcelona',
-    'R15': 'Riba-roja d\'Ebre / Barcelona',
-    'R16': 'Tortosa / Barcelona',
-    'R17': 'Portbou / Barcelona'
-  }
-  
-  return destinations[line] || 'Desconegut'
+  // Return the full route name if we can't split it
+  return routeName || 'Desconegut'
 }
 
 // Add this helper for day indication - it was missing
@@ -552,11 +499,11 @@ const tick = () => {
 
 // Initialize the component
 onMounted(async () => {
-  
   await Promise.all([
     loadStationData(),
     loadInterchangeData(),
-    loadGTFSData() 
+    loadTripsData(),
+    loadRoutesData()
   ])
   
   if (stopId) {
