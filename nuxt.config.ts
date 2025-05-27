@@ -46,11 +46,4 @@ export default defineNuxtConfig({
       appKey: process.env.METRO_API_KEY
     }
   },
-
-  nitro: {
-  externals: {
-    external: ['papaparse']
-  }
-}
-
 })
