@@ -1,5 +1,3 @@
-// server/api/tram/test.ts - Utility endpoint for testing TRAM API calls
-
 let tramToken: { token: string; expiresAt: number } | null = null
 
 // Token acquisition function (reused from [code].ts)
