@@ -42,7 +42,7 @@ export default defineNuxtConfig({
     },  
     metro: {
       url: 'https://api.tmb.cat/v1/imetro',
-      appId: '135507ad',
+      appId: '5ceb8a77',
       appKey: process.env.METRO_API_KEY
     }
   },
