@@ -44,15 +44,26 @@ const loadStationData = async () => {
       stationsByLine.value[line] = []
     })
     
+    // Track the original order of stations as they appear in the CSV
+    let sequenceCounter = {};
+    lines.forEach(line => {
+      sequenceCounter[line] = 0
+    })
+    
     // Group stations by line
     results.forEach(row => {
       if (row.LINIA && row.ESTACIO && row.STOPID) {
-        // Create station object
+        // Create station object with sequence information
         const station = {
           id: row.STOPID,
           name: row.ESTACIO,
-          line: row.LINIA
+          line: row.LINIA,
+          // Use existing sequence data if available, or assign based on CSV order
+          sequence: row.ORDRE || row.SEQUENCE || row.STOP_SEQUENCE || sequenceCounter[row.LINIA]
         }
+        
+        // Increment the sequence counter for this line
+        sequenceCounter[row.LINIA]++
         
         // Add to the appropriate line array
         if (stationsByLine.value[row.LINIA]) {
@@ -70,11 +81,12 @@ const loadStationData = async () => {
       }
     })
     
-    // Sort stations alphabetically within each line
+    // Sort stations by sequence number within each line (instead of alphabetically)
     Object.keys(stationsByLine.value).forEach(line => {
-      stationsByLine.value[line].sort((a, b) => 
-        a.name.localeCompare(b.name)
-      )
+      stationsByLine.value[line].sort((a, b) => {
+        // Convert to number to ensure proper numeric sorting
+        return Number(a.sequence) - Number(b.sequence)
+      })
     })
     
     console.log('Loaded station data:', stations.value.length, 'stations')
@@ -85,12 +97,6 @@ const loadStationData = async () => {
     console.error('Error loading station data:', error)
     return false
   }
-}
-
-function cleanRouteName(name) {
-  return name.trim()
-    .replace(/\s+/g, ' ')  // Replace multiple spaces with a single space
-    .replace(/\s*-\s*/g, ' - ') // Standardize dashes
 }
 
 
